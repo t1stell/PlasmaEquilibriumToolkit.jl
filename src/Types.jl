@@ -44,7 +44,7 @@ struct Surface3D{T<:Real}
     return Surface3D{T}(dims[1],dims[2],basis)
   end
   function Surface3D{T}(xArr::Array{T,2},yArr::Array{T,2},zArr::Array{T,2},basis::Symbol=:co) where T<:Real
-    @assert Base.size(xArr) == Base.size(yArr) "xVec and yVec have incompatible lengths"
+    @assert Base.size(xArr) == Base.size(yArr) "xArr and yVec have incompatible lengths"
     @assert Base.size(yArr) == Base.size(zArr) "yVec and zVec have incompatible lengths"
     x = xArr
     y = yArr
@@ -55,26 +55,6 @@ struct Surface3D{T<:Real}
 
 end
 
-#=
-# Define the constructors
-=#
-
-mutable struct Fieldline{T<:Real}
-  s::Float64
-  alpha::Float64
-  zeta::Vector{Float64}
-  B::Vector3D{T}
-  length::Int
-  function Fieldline{T}(s_in::Float64,alpha_in::Float64,zeta_in::Vector{Float64}) where T <: Real
-    s = s_in
-    alpha = alpha_in
-    zeta = zeta_in
-    B = Vector3D{T}(Base.length(zeta))
-    length = Base.length(zeta)
-    return new(s,alpha,zeta,B,length)
-  end
-  Fieldline{T}() where T <: Real = new()
-end
 
 struct MetricTensor{T<:Real,N}
   xx::Array{T,N}
@@ -84,6 +64,75 @@ struct MetricTensor{T<:Real,N}
   yz::Array{T,N}
   zz::Array{T,N}
   size::Tuple
+
 end
 
+#Define the MetricTensor constructors for different instances
+function MetricTensor(xxData::Array{T},xyData::Array{T},yyData::Array{T},
+                      xzData::Array{T},yzData::Array{T},zzData::Array{T}) where T<: Real
+  @assert Base.size(xxData) == Base.size(xyData) == Base.size(yyData) == Base.size(xzData) == Base.size(yzData) == Base.size(zzData) "Incompatible array sizes"
+  size = Base.size(xxData)
+  N = Base.length(size)
+  xx = xxData
+  xy = xyData
+  yy = yyData
+  xz = xzData
+  yz = yzData
+  zz = zzData
+  return MetricTensor{T,N}(xx,xy,yy,xz,yz,zz,size)
+end
 
+function MetricTensor(xxData::Array{T},xyData::Array{T},yyData::Array{T},zzData::Array{T}) where T<: Real
+  @assert Base.size(xxData) == Base.size(xyData) == Base.size(yyData) == Base.size(zzData) "Incompatible array sizes"
+  size = Base.size(xxData)
+  N = base.length(size)
+  xx = xxData
+  xy = xyData
+  yy = yyData
+  xz = zeros(T,size) 
+  yz = zeros(T,size)
+  zz = zzData
+  return MetricTensor{T,N}(xx,xy,yy,xz,yz,zz,size)
+end
+
+function MetricTensor(xxData::Array{T},yyData::Array{T},zzData::Array{T}) where T<: Real
+  @assert Base.size(xxData) == Base.size(yyData) == Base.size(zzData) "Incompatible array sizes"
+  size = Base.size(xxData)
+  N = Base.length(size)
+  xx = xxData
+  xy = zeros(T,size)
+  yy = yyData
+  xz = zeros(T,size) 
+  yz = zeros(T,size)
+  zz = zzData
+  return MetricTensor{T,N}(xx,xy,yy,xz,yz,zz,size)
+end
+
+function IdentityMetric(::Type{T},size::SizeT) where T <: Real where SizeT <: Union{Int,Tuple}
+  N = Base.length(size)
+  return MetricTensor(ones(T,size),ones(T,size),ones(T,size))
+end
+
+#=
+# Define the constructors
+=#
+
+mutable struct Fieldline{T<:Real}
+  x1::Vector{Float64}
+  x2::Vector{Float64}
+  x3::Vector{Float64}
+  B::Vector3D{T}
+  coBasis_x1::Vector3D{T}
+  coBasis_x2::Vector3D{T}
+  coBasis_x3::Vector3D{T}
+  contraBasis_x1::Vector3D{T}
+  contraBasis_x2::Vector3D{T}
+  contraBasis_x3::Vector3D{T}
+  metric::MetricTensor{T,1}
+  jacobian::Vector{T}
+  curvature::Vector3D{T}
+  torsion::Vector3D{T}
+  length::Int
+  rotationalTransform::Float64
+  Fieldline{T}() where T <: Real = new()
+end
