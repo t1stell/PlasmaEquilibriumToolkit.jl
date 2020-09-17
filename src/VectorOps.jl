@@ -145,3 +145,6 @@ function /(u::Vector3D{T},v::Vector{T}) where T <: Real
   return Vector3D{T}(getfield(u,:x)./v,getfield(u,:y)./v,getfield(u,:z)./v,getfield(u,:basisType))
 end
 
+function abs(u::Vector3D{T})
+  return Vector3D{T}(abs.(getfield(u,:x)),abs.(getfield(u,:y)),abs.(getfield(u,:z)),getfield(u,:basisType))
+end
