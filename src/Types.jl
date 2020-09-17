@@ -75,3 +75,15 @@ mutable struct Fieldline{T<:Real}
   end
   Fieldline{T}() where T <: Real = new()
 end
+
+struct MetricTensor{T<:Real,N}
+  xx::Array{T,N}
+  xy::Array{T,N}
+  yy::Array{T,N}
+  xz::Array{T,N}
+  yz::Array{T,N}
+  zz::Array{T,N}
+  size::Tuple
+end
+
+

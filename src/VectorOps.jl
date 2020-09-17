@@ -8,7 +8,7 @@ function basisType(v::Vector3D{T}) where T <: Real
   return v.basisType
 end
 
-function crossVec(v::Vector3D{T},u::Vector3D{T},jacobian::Vector{T}) where T <: Real
+function crossVec(u::Vector3D{T},v::Vector3D{T},jacobian::Vector{T}) where T <: Real
   @assert u.basisType === v.basisType "Vectors do not have same basis"
   @assert u.length == v.length "Vectors do not have same number of elements"
 
@@ -20,23 +20,23 @@ function crossVec(v::Vector3D{T},u::Vector3D{T},jacobian::Vector{T}) where T <: 
   tx = Threads.@spawn crossVecComponent(u.y,u.z,v.y,v.z,jac) 
   ty = Threads.@spawn crossVecComponent(u.z,u.x,v.z,v.x,jac) 
   tz = Threads.@spawn crossVecComponent(u.x,u.y,v.x,v.y,jac) 
-  return Vector3D{T}(fetch(tx),fetch(ty),fetch(tx),basisType)
+  return Vector3D{T}(fetch(tx),fetch(ty),fetch(tz),basisType)
 end
 
 function crossVecComponent(a::Vector{T},b::Vector{T},c::Vector{T},d::Vector{T},jacobian::Vector{T}) where T <: Real
   return jacobian .* (a .* d .- c .* b)
 end
 
-function crossLoop(v::Vector3D{T},u::Vector3D{T},jacobian::Vector{T}) where T <: Real
+function crossLoop(u::Vector3D{T},v::Vector3D{T},jacobian::Vector{T}) where T <: Real
 
   @assert u.basisType === v.basisType "Vectors do not have same basis"
   @assert u.length == v.length "Vectors do not have same number of elements"
 
   basisType = v.basisType == :co ? :contra : :co
   jac = v.basisType == :co ? 1.0./jacobian : jacobian
-  tx = Threads.@spawn crossLoopComponent(u.y,u.z,v.y,v.z,jac) 
-  ty = Threads.@spawn crossLoopComponent(u.z,u.x,v.z,v.x,jac) 
-  tz = Threads.@spawn crossLoopComponent(u.x,u.y,v.x,v.y,jac) 
+  tx = Threads.@spawn crossLoopComponent(getfield(u,:y),getfield(u,:z),getfield(v,:y),getfield(v,:z),jac) 
+  ty = Threads.@spawn crossLoopComponent(getfield(u,:z),getfield(u,:x),getfield(v,:z),getfield(v,:x),jac) 
+  tz = Threads.@spawn crossLoopComponent(getfield(u,:x),getfield(u,:y),getfield(v,:x),getfield(v,:y),jac) 
   return Vector3D{T}(fetch(tx),fetch(ty),fetch(tz),basisType)
 end
 
@@ -50,8 +50,37 @@ function crossLoopComponent(a::Vector{T},b::Vector{T},c::Vector{T},d::Vector{T},
 end
 
 
-function dot(u::Vector3D{T},v::Vector3D{T},jacobian::Vector{T}) where T <: Real
-  return u.x .* v.x .+ u.y .* v.y .+ u.z .* v.z
+function dot(u::Vector3D{T},v::Vector3D{T},g::MetricTensor{T,1}) where T <: Real
+  @assert getfield(u,:length) == getfield(v,:length) "Vectors do not have same number of elements"
+  @assert getfield(v,:length) == getfield(g,:size)[1] "Metric tensor does not have the same number of elements as vector"
+
+  txx = Threads.@spawn dotComponent(getfield(u,:x),getfield(v,:x),getfield(g,:xx))
+  txy = Threads.@spawn dotComponent(getfield(u,:x),getfield(v,:y),getfield(g,:xy))
+  tyy = Threads.@spawn dotComponent(getfield(u,:y),getfield(v,:y),getfield(g,:yy))
+  txz = Threads.@spawn dotComponent(getfield(u,:x),getfield(v,:z),getfield(g,:xz))
+  tyz = Threads.@spawn dotComponent(getfield(u,:y),getfield(v,:z),getfield(g,:yz))
+  tzz = Threads.@spawn dotComponent(getfield(u,:z),getfield(v,:z),getfield(g,:zz))
+  xx = fetch(txx)
+  xy = fetch(txy)
+  yy = fetch(tyy)
+  xz = fetch(txz)
+  yz = fetch(tyz)
+  zz = fetch(tzz)
+  ni = getfield(u,:length)
+  res = Vector{T}(undef,ni)
+  @inbounds @simd for i = 1:ni
+    res[i] = xx[i] + xy[i] + yy[i] + xz[i] + yz[i] + zz[i]
+  end
+  return res
+end
+
+function dotComponent(a::Vector{T},b::Vector{T},g::Vector{T}) where T <: Real
+  ni = Base.length(a)
+  res = Vector{T}(undef,ni)
+  @inbounds @simd for i = 1:ni
+    res[i] = a[i]*b[i]*g[i]
+  end
+  return res
 end
 
 # Element wise addition of two Vector3D instances
