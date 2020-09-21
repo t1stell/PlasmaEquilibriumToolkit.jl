@@ -26,21 +26,15 @@ function dot(u::Vector3D{T},v::Vector3D{T}) where T <: AbstractFloat
   @assert getfield(u,:length) == getfield(v,:length) "Vectors do not have same number of elements"
 
   txx = Threads.@spawn dotComponent(getfield(u,:x),getfield(v,:x))
-  txy = Threads.@spawn dotComponent(getfield(u,:x),getfield(v,:y))
   tyy = Threads.@spawn dotComponent(getfield(u,:y),getfield(v,:y))
-  txz = Threads.@spawn dotComponent(getfield(u,:x),getfield(v,:z))
-  tyz = Threads.@spawn dotComponent(getfield(u,:y),getfield(v,:z))
   tzz = Threads.@spawn dotComponent(getfield(u,:z),getfield(v,:z))
   ni = getfield(u,:length)
   res = Vector{T}(undef,ni)
   xx = fetch(txx)
-  xy = fetch(txy)
   yy = fetch(tyy)
-  xz = fetch(txz)
-  yz = fetch(tyz)
   zz = fetch(tzz)
   @inbounds @simd for i = 1:ni
-    res[i] = xx[i] + xy[i] + yy[i] + xz[i] + yz[i] + zz[i]
+    res[i] = xx[i] + yy[i] + zz[i]
   end
   return res
 end

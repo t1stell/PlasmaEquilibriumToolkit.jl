@@ -74,9 +74,11 @@ function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vec
   B_xyz = (((basisZeta_xyz * lambdaThetaVmecFactor) - (basisThetaVmec_xyz * lambdaZetaFactor)) / J)*edgeFlux2Pi
 
   Bmag = VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:bmnc,:bmns)
-  Bmag2 = Bmag .* Bmag
-  dBdAlpha_xyz = -dot(B_xyz,cross(gradB_xyz,gradPsi_xyz)) ./ Bmag2
-  #BCrossGradBDotGradAlpha_xyz = dot(B_xyz,cross(gradB_xyz,gradAlpha_xyz,jac_xyz),metric_xyz)
+  dBdAlpha_xyz = -dot(B_xyz,cross(gradB_xyz,gradPsi_xyz)) ./ Bmag
+  
+  BCrossGradBDotGradPsi_xyz = dot(gradPsi_xyz,cross(B_xyz,gradB_xyz))
+  GradBCrossGradPsiDotB = dot(B_xyz,cross(gradB_xyz,gradPsi_xyz))
+  BCrossGradBDotGradAlpha_xyz = dot(B_xyz,cross(gradB_xyz,gradAlpha_xyz))
   #BCrossGradPsiDotGradAlpha_xyz = dot(B_xyz,cross(gradPsi_xyz,gradAlpha_xyz,jac_xyz),metric_xyz)
 
   # Compute the different components of the metric tensor
@@ -99,19 +101,21 @@ function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vec
   curvature = (gradS_xyz*((Bmag.*getfield(BVectorVmec,:x)) .+ (gamma1 .* getfield(BVectorVmec,:z) ./ Bmag)) +
                gradAlpha_xyz*((Bmag.*dBdAlpha_xyz) .+ (gamma2 .* getfield(BVectorVmec,:z) ./ Bmag)))
 
+
   for i = 1:nz
     println(zeta[i])
     println(R[i],' ',X[i],' ',Y[i],' ',Z[i])
     println(getfield(basisS_xyz,:x)[i],' ',getfield(basisS_xyz,:y)[i],' ',getfield(basisS_xyz,:z)[i])
     println(getfield(basisThetaVmec_xyz,:x)[i],' ',getfield(basisThetaVmec_xyz,:y)[i],' ',getfield(basisThetaVmec_xyz,:z)[i])
     println(getfield(basisZeta_xyz,:x)[i],' ',getfield(basisZeta_xyz,:y)[i],' ',getfield(basisZeta_xyz,:z)[i])
-    println(getfield(gradS_xyz,:x)[i],' ',getfield(gradS_xyz,:y)[i],' ',getfield(gradS_xyz,:z)[i])
+    println(getfield(gradPsi_xyz,:x)[i],' ',getfield(gradPsi_xyz,:y)[i],' ',getfield(gradPsi_xyz,:z)[i])
     println(getfield(gradThetaVmec_xyz,:x)[i],' ',getfield(gradThetaVmec_xyz,:y)[i],' ',getfield(gradThetaVmec_xyz,:z)[i])
     println(getfield(gradZeta_xyz,:x)[i],' ',getfield(gradZeta_xyz,:y)[i],' ',getfield(gradZeta_xyz,:z)[i])
     println(getfield(gradAlpha_xyz,:x)[i],' ',getfield(gradAlpha_xyz,:y)[i],' ',getfield(gradAlpha_xyz,:z)[i])
     println(getfield(gradTheta_xyz,:x)[i],' ',getfield(gradTheta_xyz,:y)[i],' ',getfield(gradTheta_xyz,:z)[i])
     println(getfield(gradB_xyz,:x)[i],' ',getfield(gradB_xyz,:y)[i],' ',getfield(gradB_xyz,:z)[i])
     println(getfield(B_xyz,:x)[i],' ',getfield(B_xyz,:y)[i],' ',getfield(B_xyz,:z)[i])
+    println(dBdAlpha_xyz[i],' ',BCrossGradBDotGradAlpha_xyz[i])
     println("====")
   end
   
