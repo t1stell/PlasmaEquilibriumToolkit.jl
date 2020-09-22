@@ -3,8 +3,14 @@ import VMEC
 function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
   iota, dIotads = VMEC.iotaShearPair(surface,vmec)
   edgeFlux2Pi = vmec.phi[vmec.ns]*vmec.signgs/(2*π) 
+  psiPrime = vmec.phi[vmec.ns]
   nz = length(zeta)
   thetaVmec = VMEC.findThetaVmec(surface,alpha .+ iota.*zeta,zeta,vmec)
+
+  # Compute R, Z and scalar Jacobian at each point along the field line
+  tR = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:rmnc,:rmns)
+  tZ = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:zmns,:zmnc)
+  tJ = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:gmnc,:gmns)
 
   tBs = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:bmnc,:bmns;ds=true)
   tBtv = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:bmnc,:bmns;dpoloidal=true)
@@ -22,64 +28,47 @@ function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vec
   tzt = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:zmns,:zmnc;dtoroidal=true)
   tlt = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:lmns,:lmnc,dtoroidal=true)
 
-  BVectorVmec = Vector3D{Float64}(fetch(tBs),fetch(tBtv),fetch(tBz))
-  basisS_cyl = Vector3D{Float64}(fetch(trs),fetch(tzs),fetch(tls))
-  basisThetaVmec_cyl = Vector3D{Float64}(fetch(trp),fetch(tzp),fetch(tlp))
-  basisZeta_cyl = Vector3D{Float64}(fetch(trt),fetch(tzt),fetch(tlt))
+  BVmecDerivatives = Vector3D{Float64}(fetch(tBs),fetch(tBtv),fetch(tBz))
+  basisS_vmec = Vector3D{Float64}(fetch(trs),fetch(tzs),fetch(tls))
+  basisThetaVmec_vmec = Vector3D{Float64}(fetch(trp),fetch(tzp),fetch(tlp))
+  basisZeta_vmec = Vector3D{Float64}(fetch(trt),fetch(tzt),fetch(tlt))
 
-
-  # Compute R, Z and scalar Jacobian at each point along the field line
-  tR = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:rmnc,:rmns)
-  tZ = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:zmns,:zmnc)
-  tJ = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:gmnc,:gmns)
   R = fetch(tR)
   Z = fetch(tZ)
   J = fetch(tJ)
 
   cosZeta = cos.(zeta)
   sinZeta = sin.(zeta)
-  X = R.*cosZeta
-  Y = R.*sinZeta
 
-  basisS_xyz = Vector3D{Float64}(getfield(basisS_cyl,:x).*cosZeta,getfield(basisS_cyl,:x).*sinZeta,
-                                 getfield(basisS_cyl,:y))
-  basisThetaVmec_xyz = Vector3D{Float64}(getfield(basisThetaVmec_cyl,:x).*cosZeta,getfield(basisThetaVmec_cyl,:x).*sinZeta,
-                                  getfield(basisThetaVmec_cyl,:y))
-  basisZeta_xyz = Vector3D{Float64}(getfield(basisZeta_cyl,:x).*cosZeta .- R.*sinZeta,
-                                    getfield(basisZeta_cyl,:x).*sinZeta .+ R.*cosZeta,
-                                    getfield(basisZeta_cyl,:y))
-
-  metric_xyz = IdentityMetric(Float64,nz)
-  jac_xyz = ones(Float64,nz)
+  basisS_xyz = Vector3D{Float64}(getfield(basisS_vmec,:x).*cosZeta,getfield(basisS_vmec,:x).*sinZeta,
+                                 getfield(basisS_vmec,:y))
+  basisThetaVmec_xyz = Vector3D{Float64}(getfield(basisThetaVmec_vmec,:x).*cosZeta,getfield(basisThetaVmec_vmec,:x).*sinZeta,
+                                  getfield(basisThetaVmec_vmec,:y))
+  basisZeta_xyz = Vector3D{Float64}(getfield(basisZeta_vmec,:x).*cosZeta .- R.*sinZeta,
+                                    getfield(basisZeta_vmec,:x).*sinZeta .+ R.*cosZeta,
+                                    getfield(basisZeta_vmec,:y))
 
   # VMEC contravariant basis vectors 
   gradS_xyz = cross(basisThetaVmec_xyz,basisZeta_xyz) / J
   gradThetaVmec_xyz = cross(basisZeta_xyz,basisS_xyz) / J
   gradZeta_xyz = cross(basisS_xyz,basisThetaVmec_xyz) / J
  
-  lambdaSFactor = Vector{Float64}(getfield(basisS_cyl,:z) .- dIotads .* zeta)
-  lambdaThetaVmecFactor = Vector{Float64}(getfield(basisThetaVmec_cyl,:z) .+ 1.0)
-  lambdaZetaFactor = Vector{Float64}(getfield(basisZeta_cyl,:z) .- iota)
+  lambdaSFactor = Vector{Float64}(getfield(basisS_vmec,:z) .- dIotads .* zeta)
+  lambdaThetaVmecFactor = Vector{Float64}(getfield(basisThetaVmec_vmec,:z) .+ 1.0)
+  lambdaZetaFactor = Vector{Float64}(getfield(basisZeta_vmec,:z) .- iota)
 
   basisPsi_xyz = basisS_xyz*edgeFlux2Pi
   gradPsi_xyz = gradS_xyz*edgeFlux2Pi
   gradAlpha_xyz = ((gradS_xyz * lambdaSFactor) + (gradThetaVmec_xyz * lambdaThetaVmecFactor) + 
                   (gradZeta_xyz * lambdaZetaFactor))
-  gradTheta_xyz = ((gradS_xyz * getfield(basisS_cyl,:z)) + (gradThetaVmec_xyz * lambdaThetaVmecFactor) + 
-                  (gradZeta_xyz * getfield(basisZeta_cyl,:z)))
+  gradTheta_xyz = ((gradS_xyz * getfield(basisS_vmec,:z)) + (gradThetaVmec_xyz * lambdaThetaVmecFactor) + 
+                  (gradZeta_xyz * getfield(basisZeta_vmec,:z)))
   basisTheta_xyz = cross(gradZeta_xyz,gradS_xyz) * J
 
-  gradB_xyz = ((gradS_xyz * getfield(BVectorVmec,:x)) + (gradThetaVmec_xyz * getfield(BVectorVmec,:y)) + 
-              (gradZeta_xyz * getfield(BVectorVmec,:z))) 
-  B_xyz = (((basisZeta_xyz * lambdaThetaVmecFactor) - (basisThetaVmec_xyz * lambdaZetaFactor)) / J)*edgeFlux2Pi
+  gradB_xyz = ((gradS_xyz * getfield(BVmecDerivatives,:x)) + (gradThetaVmec_xyz * getfield(BVmecDerivatives,:y)) + 
+              (gradZeta_xyz * getfield(BVmecDerivatives,:z))) 
 
-  Bmag = VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:bmnc,:bmns)
-  dBdAlpha_xyz = -dot(B_xyz,cross(gradB_xyz,gradPsi_xyz)) ./ Bmag
-  
-  BCrossGradBDotGradPsi_xyz = dot(gradPsi_xyz,cross(B_xyz,gradB_xyz))
-  GradBCrossGradPsiDotB = dot(B_xyz,cross(gradB_xyz,gradPsi_xyz))
-  BCrossGradBDotGradAlpha_xyz = dot(B_xyz,cross(gradB_xyz,gradAlpha_xyz))
-  #BCrossGradPsiDotGradAlpha_xyz = dot(B_xyz,cross(gradPsi_xyz,gradAlpha_xyz,jac_xyz),metric_xyz)
+  B_xyz = (((basisZeta_xyz * lambdaThetaVmecFactor) - (basisThetaVmec_xyz * lambdaZetaFactor)) / J)*edgeFlux2Pi
 
   # Compute the different components of the metric tensor
   t11 = Threads.@spawn dot(gradPsi_xyz,gradPsi_xyz)
@@ -88,20 +77,12 @@ function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vec
   t13 = Threads.@spawn dot(gradPsi_xyz,gradZeta_xyz)
   t23 = Threads.@spawn dot(gradAlpha_xyz,gradZeta_xyz)
   t33 = Threads.@spawn dot(gradZeta_xyz,gradZeta_xyz)
-  metric = MetricTensor(fetch(t11),fetch(t12),fetch(t22),fetch(t13),fetch(t23),fetch(t33))
-
-  # Define terms for computing magnetic curvature vector
-  tgamma1 = Threads.@spawn getfield(metric,:yy) .* getfield(metric,:xz) .- getfield(metric,:xy) .* getfield(metric,:yz)
-  tgamma2 = Threads.@spawn getfield(metric,:xx) .* getfield(metric,:yz) .- getfield(metric,:xy) .* getfield(metric,:xz)
-  gamma1 = fetch(tgamma1)
-  gamma2 = fetch(tgamma2)
-
-  #TODO Add pressure term using a spline
-
-  curvature = (gradS_xyz*((Bmag.*getfield(BVectorVmec,:x)) .+ (gamma1 .* getfield(BVectorVmec,:z) ./ Bmag)) +
-               gradAlpha_xyz*((Bmag.*dBdAlpha_xyz) .+ (gamma2 .* getfield(BVectorVmec,:z) ./ Bmag)))
+  metric = 
 
 
+
+
+  #=
   for i = 1:nz
     println(zeta[i])
     println(R[i],' ',X[i],' ',Y[i],' ',Z[i])
@@ -115,9 +96,10 @@ function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vec
     println(getfield(gradTheta_xyz,:x)[i],' ',getfield(gradTheta_xyz,:y)[i],' ',getfield(gradTheta_xyz,:z)[i])
     println(getfield(gradB_xyz,:x)[i],' ',getfield(gradB_xyz,:y)[i],' ',getfield(gradB_xyz,:z)[i])
     println(getfield(B_xyz,:x)[i],' ',getfield(B_xyz,:y)[i],' ',getfield(B_xyz,:z)[i])
-    println(dBdAlpha_xyz[i],' ',BCrossGradBDotGradAlpha_xyz[i])
+    println(dBdAlpha_xyz[i],' ',sinGradPsiGradAlpha[i],' ',curvGeo[i],' ',BCrossGradBDotGradAlpha_xyz[i])
     println("====")
   end
+  =#
   
   pestFieldline = Fieldline{Float64}()
   pestFieldline.length = nz
@@ -125,14 +107,14 @@ function vmec2pest(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vec
   setfield!(pestFieldline,:y,fill(alpha,nz))
   setfield!(pestFieldline,:z,zeta)
   setfield!(pestFieldline,:B,B_xyz)
+  setfield!(pestFieldline,:dBdz,getfield(BVmecDerivatives,:z))
   setfield!(pestFieldline,:coBasis_x,basisPsi_xyz)
   setfield!(pestFieldline,:coBasis_y,basisTheta_xyz)
   setfield!(pestFieldline,:coBasis_z,basisZeta_xyz)
   setfield!(pestFieldline,:contraBasis_x,gradPsi_xyz)
   setfield!(pestFieldline,:contraBasis_y,gradAlpha_xyz)
   setfield!(pestFieldline,:contraBasis_z,gradZeta_xyz)
-  setfield!(pestFieldline,:metric,metric)
-  setfield!(pestFieldline,:curvature,curvature)
+  setfield!(pestFieldline,:metric,MetricTensor(fetch(t11),fetch(t12),fetch(t22),fetch(t13),fetch(t23),fetch(t33)))
   setfield!(pestFieldline,:jacobian,abs.(J))
   setfield!(pestFieldline,:rotationalTransform,iota)
   return pestFieldline
