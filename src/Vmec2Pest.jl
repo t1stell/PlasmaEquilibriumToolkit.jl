@@ -1,16 +1,15 @@
 import VMEC
 
-function computePestVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
+function computeVmecBasis(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
   iota, dIotads = VMEC.iotaShearPair(surface,vmec)
   edgeFlux2Pi = vmec.phi[vmec.ns]*vmec.signgs/(2*π) 
   psiPrime = vmec.phi[vmec.ns]
   nz = length(zeta)
   thetaVmec = VMEC.findThetaVmec(surface,alpha .+ iota.*zeta,zeta,vmec)
 
-  # Compute R, Z and scalar Jacobian at each point along the field line
-  tR = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:rmnc,:rmns)
-  tZ = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:zmns,:zmnc)
-  tJ = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:gmnc,:gmns)
+  R = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:rmnc,:rmns)
+  Z = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:zmns,:zmnc)
+  J = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:gmnc,:gmns)
 
   tBs = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:bmnc,:bmns;ds=true)
   tBtv = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:bmnc,:bmns;dpoloidal=true)
@@ -28,15 +27,17 @@ function computePestVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,
   tzt = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:zmns,:zmnc;dtoroidal=true)
   tlt = Threads.@spawn VMEC.inverseTransform(surface,thetaVmec,zeta,vmec,:lmns,:lmnc,dtoroidal=true)
 
-  BVmecDerivatives = VectorField(fetch(tBs),fetch(tBtv),fetch(tBz))
   basisS_vmec = VectorField(fetch(trs),fetch(tzs),fetch(tls))
   basisThetaVmec_vmec = VectorField(fetch(trp),fetch(tzp),fetch(tlp))
   basisZeta_vmec = VectorField(fetch(trt),fetch(tzt),fetch(tlt))
-   
-  R = fetch(tR)
-  Z = fetch(tZ)
-  J = fetch(tJ)
+  
+  return basisS_vmec, basisThetaVmec_vmec, basisZeta_vmec, fetch(R), fetch(Z), fetch(J), TupleField(fill(surface,length(zeta)),fill(alpha,length(zeta)),zeta)
+end
 
+function computeVmecVectors(basisS_vmec::VectorField{D,T,N},basisThetaVmec_vmec::VectorField{D,T,N},
+                            basisZeta_vmec::VectorField{D,T,N},R::Array{T,N},
+                            Z::Array{T,N},J::Array{T,N},coords::TupleField{D,T,N}) where {D,T,N}
+  zeta = component(coords,3) 
   cosZeta = cos.(zeta)
   sinZeta = sin.(zeta)
 
@@ -52,31 +53,41 @@ function computePestVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,
   gradS_xyz = cross(basisThetaVmec_xyz,basisZeta_xyz) / J
   gradThetaVmec_xyz = cross(basisZeta_xyz,basisS_xyz) / J
   gradZeta_xyz = cross(basisS_xyz,basisThetaVmec_xyz) / J
- 
+
+  return VmecCoordinates(getfield(coords,:data),
+                         basisS_xyz,basisThetaVmec_xyz,basisZeta_xyz,
+                         gradS_xyz,gradThetaVmec_xyz,gradZeta_xyz)
+end
+
+function computePestVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
+  vmecVectorArgs = basisS_vmec, basisThetaVmec_vmec, basisZeta_vmec, R, Z, J, coords = computeVmecBasis(vmec,surface,alpha,zeta) 
+  vmecVectors = computeVmecVectors(vmecVectorArgs...)
+
+  edgeFlux2Pi = vmec.phi[vmec.ns]*vmec.signgs/(2*π) 
+  iota, dIotads = VMEC.iotaShearPair(surface,vmec)
+  zeta = component(coords,3)
+
   lambdaSFactor = component(basisS_vmec,3) .- dIotads .* zeta
   lambdaThetaVmecFactor = component(basisThetaVmec_vmec,3) .+ 1.0
   lambdaZetaFactor = component(basisZeta_vmec,3) .- iota
 
-  basisPsi_xyz = basisS_xyz*edgeFlux2Pi
-  gradPsi_xyz = gradS_xyz*edgeFlux2Pi
-  gradAlpha_xyz = ((gradS_xyz * lambdaSFactor) + (gradThetaVmec_xyz * lambdaThetaVmecFactor) + 
-                  (gradZeta_xyz * lambdaZetaFactor))
-  gradTheta_xyz = ((gradS_xyz * component(basisS_vmec,3)) + (gradThetaVmec_xyz * lambdaThetaVmecFactor) + 
-                  (gradZeta_xyz * component(basisZeta_vmec,3)))
-  basisTheta_xyz = cross(gradZeta_xyz,gradS_xyz) * J
+  basisPsi_xyz = eX1(vmecVectors)*edgeFlux2Pi
+  gradPsi_xyz = gradX1(vmecVectors)*edgeFlux2Pi
+  gradAlpha_xyz = ((gradX1(vmecVectors) * lambdaSFactor) + (gradX2(vmecVectors) * lambdaThetaVmecFactor) + 
+                   (gradX3(vmecVectors) * lambdaZetaFactor))
+  gradTheta_xyz = ((gradX1(vmecVectors) * component(basisS_vmec,3)) + (gradX2(vmecVectors) * lambdaThetaVmecFactor) + 
+                   (gradX3(vmecVectors) * component(basisZeta_vmec,3)))
+  basisTheta_xyz = cross(gradX3(vmecVectors),gradX1(vmecVectors)) * J
 
-  #=
-  gradB_xyz = ((gradS_xyz * getfield(BVmecDerivatives,:x)) + (gradThetaVmec_xyz * getfield(BVmecDerivatives,:y)) + 
-              (gradZeta_xyz * getfield(BVmecDerivatives,:z))) 
+  #gradB_xyz = ((gradS_xyz * component(BVmecDerivatives,1)) + (gradThetaVmec_xyz * component(BVmecDerivatives,2)) + 
+  #            (gradZeta_xyz * component(BVmecDerivatives,3))) 
 
-  =#
-  B_xyz = (((basisZeta_xyz * lambdaThetaVmecFactor) - (basisThetaVmec_xyz * lambdaZetaFactor)) / J)*edgeFlux2Pi
+  #B_xyz = (((basisZeta_xyz * lambdaThetaVmecFactor) - (basisThetaVmec_xyz * lambdaZetaFactor)) / J)*edgeFlux2Pi
 
-  return (PestCoordinates(getfield(TupleField(fill(surface,length(zeta)),fill(alpha,length(zeta)),zeta),:data),
-                          basisPsi_xyz,basisTheta_xyz,basisZeta_xyz,
-                          gradPsi_xyz,gradAlpha_xyz,gradZeta_xyz),
-          SThetaZetaCoordinates(getfield(TupleField(fill(surface,length(zeta)),alpha .+ iota.*zeta,zeta),:data),
-                                basisS_xyz,basisTheta_xyz,basisZeta_xyz,
-                                gradS_xyz,gradTheta_xyz,gradZeta_xyz),
-         B_xyz)
+  return (PestCoordinates(getfield(coords,:data),
+                          basisPsi_xyz,basisTheta_xyz,eX1(vmecVectors),
+                          gradPsi_xyz,gradAlpha_xyz,gradX3(vmecVectors)),
+          SThetaZetaCoordinates(getfield(TupleField(component(coords,1),component(coords,2) .+ iota.*zeta,zeta),:data),
+                                eX1(vmecVectors),basisTheta_xyz,eX1(vmecVectors),
+                                gradX1(vmecVectors),gradTheta_xyz,gradX3(vmecVectors)))
 end

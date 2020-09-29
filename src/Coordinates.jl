@@ -1,3 +1,13 @@
+struct VmecCoordinates{D,T,N} <: AbstractCoordinateField{D,T,N}
+  data::AbstractArray{NTuple{D,T},N}
+  eS::VectorField{D,T,N}
+  eThetaVmec::VectorField{D,T,N}
+  eZeta::VectorField{D,T,N}
+  gradS::VectorField{D,T,N}
+  gradThetaVmec::VectorField{D,T,N}
+  gradZeta::VectorField{D,T,N}
+end
+
 struct PestCoordinates{D,T,N} <: AbstractCoordinateField{D,T,N}
   data::AbstractArray{NTuple{D,T},N}
   ePsi::VectorField{D,T,N}
@@ -10,10 +20,10 @@ end
 
 struct SThetaZetaCoordinates{D,T,N} <: AbstractCoordinateField{D,T,N}
   data::AbstractArray{NTuple{D,T},N}
-  ePsi::VectorField{D,T,N}
+  eS::VectorField{D,T,N}
   eTheta::VectorField{D,T,N}
   eZeta::VectorField{D,T,N}
-  gradPsi::VectorField{D,T,N}
+  gradS::VectorField{D,T,N}
   gradTheta::VectorField{D,T,N}
   gradZeta::VectorField{D,T,N}
 end

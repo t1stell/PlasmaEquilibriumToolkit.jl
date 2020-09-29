@@ -251,3 +251,16 @@ Extract the component of the Vectorfield u specified by the index to the preallo
 function component!(x::Array{T,N},u::VectorField{D,T,N},index::I) where I <: Number where {D,T,N}
   map!(i->i[index],x,getfield(u,:data))
 end
+
+function component(a::AbstractArray{NTuple{D,T},N},index::I) where I <: Number where {D,T,N}
+  res = Array{NTuple{D,T},N}(undef,size(a))
+  map!(i->i[index],res,a)
+  return res
+end
+
+function component(u::TupleField{D,T,N},index::I) where I <: Number where {D,T,N}
+  res = Array{T,N}(undef,size(u))
+  map!(i->i[index],res,getfield(u,:data))
+  return res
+end
+
