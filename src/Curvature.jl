@@ -1,5 +1,5 @@
 function gradB(vmecVectors::VmecCoordinates{D,T,N},vmec::VMEC.VmecData) where {D,T,N}
-  fluxFactor = vmecVectors <: PestCoordinates ? 2*π*vmec.signgs/vmec.phi[vmec.ns] : 1.0
+  fluxFactor = typeof(vmecVectors) <: PestCoordinates ? 2*π*vmec.signgs/vmec.phi[vmec.ns] : 1.0
   s = map(i->i[1],getfield(vmecVectors,:data))[1]
   alpha = component(getfield(vmecVectors,:data),2)
   zeta = component(getfield(vmecVectors,:data),3)
@@ -7,7 +7,6 @@ function gradB(vmecVectors::VmecCoordinates{D,T,N},vmec::VMEC.VmecData) where {D
   dBds = Threads.@spawn VMEC.inverseTransform(s,alpha,zeta,vmec,:bmnc,:bmns;ds=true)
   dBdtv = Threads.@spawn VMEC.inverseTransform(s,alpha,zeta,vmec,:bmnc,:bmns;dpoloidal=true)
   dBdz = Threads.@spawn VMEC.inverseTransform(s,alpha,zeta,vmec,:bmnc,:bmns;dtoroidal=true)
-
   return gradX1(vmecVectors) * fetch(dBds) + gradX2(vmecVectors) * fetch(dBdtv) + gradX3(vmecVectors) * fetch(dBdz)
 end
 
@@ -16,13 +15,13 @@ function curvatureComponents(basisVectors::AbstractCoordinateField{D,T,N},vmecVe
   gradX = gradX1(basisVectors)
   gradY = gradX2(basisVectors)
   B = cross(gradX,gradY)
-  gradB = 
+  grad_B = gradB(vmecVectors,vmec)
   Bmag = abs(B)
   norm = abs(gradX).*abs(gradY)
   #dBdx = Threads.@spawn mu0*VMEC.dPdS(s,vmec)./(Bmag.*Bmag) .- 
   #       dot(B,cross(gradB,gradY)) ./ Bmag
-  dBdx = Threads.@spawn -dot(B,cross(gradB,gradY)) ./ Bmag
-  dBdy = Threads.@spawn -dot(B,cross(gradB,gradX)) ./ Bmag
+  dBdx = Threads.@spawn -dot(B,cross(grad_B,gradY)) ./ Bmag
+  dBdy = Threads.@spawn -dot(B,cross(grad_B,gradX)) ./ Bmag
 
   sinGradXGradY = Threads.@spawn abs(cross(gradX,gradY))./norm
   cosGradXGradY = Threads.@spawn abs.(dot(gradX,gradY))./norm

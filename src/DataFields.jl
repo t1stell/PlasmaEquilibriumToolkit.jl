@@ -189,6 +189,13 @@ function *(v::T,u::VectorField{D,T,N}) where {D,T,N}
   return u*v
 end
 
+function *(u::ScalarField{T,N},v::ScalarField{T,N}) where {T,N}
+  @assert size(u) == size(v) "Incompatible field sizes"
+  data = similar(getfield(u,:data))
+  map!((a,b)->a*b,data,getfield(u,:data),getfield(v,:data))
+  return data
+end
+
 function /(a::NTuple{D,T},b::NTuple{D,T}) where {D,T}
   return map((i,j)->i/j,a,b)
 end
@@ -228,7 +235,7 @@ end
 function abs(u::VectorField{D,T,N}) where {D,T,N}
   data = Array{T,N}(undef,size(u))
   map!(a->abs(a),data,getfield(u,:data))
-  return ScalarField(data)
+  return data
 end
 
 """
@@ -252,8 +259,8 @@ function component!(x::Array{T,N},u::VectorField{D,T,N},index::I) where I <: Num
   map!(i->i[index],x,getfield(u,:data))
 end
 
-function component(a::AbstractArray{NTuple{D,T},N},index::I) where I <: Number where {D,T,N}
-  res = Array{NTuple{D,T},N}(undef,size(a))
+function component(a::Array{NTuple{D,T},N},index::I) where I <: Number where {D,T,N}
+  res = Array{T,N}(undef,size(a))
   map!(i->i[index],res,a)
   return res
 end

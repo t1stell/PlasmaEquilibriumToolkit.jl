@@ -59,6 +59,11 @@ function computeVmecVectors(basisS_vmec::VectorField{D,T,N},basisThetaVmec_vmec:
                          gradS_xyz,gradThetaVmec_xyz,gradZeta_xyz)
 end
 
+function computeVmecVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
+  vmecVectorArgs = computeVmecBasis(vmec,surface,alpha,zeta)
+  return computeVmecVectors(vmecVectorArgs...)
+end
+
 function computePestVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
   vmecVectorArgs = basisS_vmec, basisThetaVmec_vmec, basisZeta_vmec, R, Z, J, coords = computeVmecBasis(vmec,surface,alpha,zeta) 
   vmecVectors = computeVmecVectors(vmecVectorArgs...)
