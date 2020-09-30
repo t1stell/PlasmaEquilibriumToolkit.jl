@@ -1,3 +1,12 @@
+
+"""
+    gradB(vmecVectors::VmecCoordinates{D,T,N},vmec::VMEC.VmecData) where {D,T,N}
+
+Computes the Cartesian components of the ∇B vector from a VMEC equilibrium at each point in `vmecVectors`
+
+# Returns
+- `gradB::VectorField{D,T,N}`
+"""
 function gradB(vmecVectors::VmecCoordinates{D,T,N},vmec::VMEC.VmecData) where {D,T,N}
   fluxFactor = typeof(vmecVectors) <: PestCoordinates ? 2*π*vmec.signgs/vmec.phi[vmec.ns] : 1.0
   s = map(i->i[1],getfield(vmecVectors,:data))[1]
@@ -10,6 +19,17 @@ function gradB(vmecVectors::VmecCoordinates{D,T,N},vmec::VMEC.VmecData) where {D
   return gradX1(vmecVectors) * fetch(dBds) + gradX2(vmecVectors) * fetch(dBdtv) + gradX3(vmecVectors) * fetch(dBdz)
 end
 
+"""
+    curvatureComponents(basisVectors::AbstractCoordinateField{D,T,N},vmecVectors::VmecCoordinates{D,T,N},
+                        vmec::VMEC.VmecData) where {D,T,N}
+
+Computes the normal and geodesic curvature components with respect to the input coordinate basis vectors
+
+# Returns
+- `normalCurvature::Array{T,N}`
+- `geodesicCurvature::Array{T,N}`
+
+"""
 function curvatureComponents(basisVectors::AbstractCoordinateField{D,T,N},vmecVectors::VmecCoordinates{D,T,N},
                              vmec::VMEC.VmecData) where {D,T,N}
   gradX = gradX1(basisVectors)
