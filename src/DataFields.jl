@@ -197,6 +197,19 @@ function VectorField(dataFields::Vararg{AbstractArray{T,N},D}) where {D,T,N}
 end
 
 """
+    VectorField(c::I,::Type{T},dims::Vararg{I}) where I <: Number where T
+
+Construct an uninitialized vector field with `C` components of type `T` with the size specified by `size`
+"""
+function VectorField(c::I,::Type{T},size::Vararg{I}) where I <: Number where T
+  @assert c >= 1 "VectorField requires at least one component!"
+  D = c
+  N = length(size)
+  data = Array{NTuple{D,T},N}(undef,size...)
+  return VectorField{D,T,N}(data)
+end
+
+"""
     TupleField(dataFields::Vararg{AbstractArray{T,N},D})
   
 Constructs a field tuples of length D of type T over N dimensions from the data
@@ -225,6 +238,19 @@ function TupleField(dataFields::Vararg{AbstractArray{T,N},D}) where {D,T,N}
   end
   data = Array{NTuple{D,T},N}(undef,size(dataFields[1]))
   map!(inds::Vararg{T,D}->inds,data,dataFields...)
+  return TupleField{D,T,N}(data)
+end
+
+"""
+    TupleField(c::I,::Type{T},dims::Vararg{I}) where I <: Number where T
+
+Construct an uninitialized tuple field with `C` components of type `T` with the size specified by `size`
+"""
+function TupleField(c::I,::Type{T},size::Vararg{I}) where I <: Number where T
+  @assert c >= 1 "VectorField requires at least one component!"
+  D = c
+  N = length(size)
+  data = Array{NTuple{D,T},N}(undef,size...)
   return TupleField{D,T,N}(data)
 end
 
@@ -293,29 +319,51 @@ function dot(u::VectorField{D,T,N},v::VectorField{D,T,N}) where {D,T,N}
   @assert size(u) == size(v) "Incompatible field sizes"
   result = Array{T,N}(undef,size(u))
   map!((a,b)->dot(a,b),result,getfield(u,:data),getfield(v,:data))
-  return result
+  return ScalarField{T,N}(result)
 end
 
 function +(a::NTuple{D,T},b::NTuple{D,T}) where {D,T}
   return map((i,j)->i+j,a,b)
 end
 
-function +(u::VectorField{D,T,N},v::VectorField{D,T,N}) where {D,T,N}
+function +(a::NTuple{D,T},b::T) where {D,T}
+  return a .+ b
+end
+
+function +(b::T,a::NTuple{D,T}) where {D,T}
+  return a .+ b
+end
+
+function +(u::AbstractDataField{T,N},v::AbstractDataField{T,N}) where {T,N}
   @assert size(u) == size(v) "Incompatible field sizes"
   data = similar(getfield(u,:data))
   map!((a,b)->a+b,data,getfield(u,:data),getfield(v,:data))
-  return VectorField{D,T,N}(data)
+  return typeof(u)(data)
+end
+
+function +(u::AbstractDataField{T,N},v::T) where {T,N}
+  data = similar(getfield(u,:data))
+  map!(i->i*v,data,getfield(u,:data))
+  return typeof(u)(data)
 end
 
 function -(a::NTuple{D,T},b::NTuple{D,T}) where {D,T}
   return map((i,j)->i-j,a,b)
 end
 
-function -(u::VectorField{D,T,N},v::VectorField{D,T,N}) where {D,T,N}
+function -(a::NTuple{D,T},b::T) where {D,T}
+  return a - b
+end
+
+function +(b::T,a::NTuple{D,T}) where {D,T}
+  return b - a
+end
+
+function -(u::AbstractDataField{T,N},v::AbstractDataField{T,N}) where {T,N}
   @assert size(u) == size(v) "Incompatible field sizes"
   data = similar(getfield(u,:data))
   map!((a,b)->a-b,data,getfield(u,:data),getfield(v,:data))
-  return VectorField{D,T,N}(data)
+  return typeof(u)(data)
 end
 
 function *(a::NTuple{D,T},b::NTuple{D,T}) where {D,T}
@@ -330,39 +378,32 @@ function *(c::T,a::NTuple{D,T}) where {D,T}
   return a*c
 end
 
-function *(u::VectorField{D,T,N},v::VectorField{D,T,N}) where {D,T,N}
+function *(u::AbstractDataField{T,N},v::AbstractDataField{T,N}) where {T,N}
   @assert size(u) == size(v) "Incompatible field sizes"
   data = similar(getfield(u,:data))
   map!((a,b)->a*b,data,getfield(u,:data),getfield(v,:data))
-  return VectorField{D,T,N}(data)
+  return typeof(u)(data)
 end
 
-function *(u::VectorField{D,T,N},v::AbstractArray{T,N}) where {D,T,N}
+function *(u::AbstractDataField,v::AbstractArray{T,N}) where {T,N}
   @assert size(u) == size(v) "Incompatible field sizes"
   data = similar(getfield(u,:data))
   map!((a,b)->a*b,data,getfield(u,:data),v)
-  return VectorField{D,T,N}(data)
+  return typeof(u)(data)
 end
 
-function *(v::AbstractArray{T,N},u::VectorField{D,T,N}) where {D,T,N}
+function *(v::AbstractArray{T,N},u::AbstractDatField) where {T,N}
   return u*v
 end
 
-function *(u::VectorField{D,T,N},v::T) where {D,T,N}
+function *(u::AbstractDataField,v::T) where T
   data = similar(getfield(u,:data))
   map!(a->v*a,data,getfield(u,:data))
   return VectorField{D,T,N}(data)
 end
 
-function *(v::T,u::VectorField{D,T,N}) where {D,T,N}
+function *(v::T,u::AbstractFieldData) where T
   return u*v
-end
-
-function *(u::ScalarField{T,N},v::ScalarField{T,N}) where {T,N}
-  @assert size(u) == size(v) "Incompatible field sizes"
-  data = similar(getfield(u,:data))
-  map!((a,b)->a*b,data,getfield(u,:data),getfield(v,:data))
-  return data
 end
 
 function /(a::NTuple{D,T},b::NTuple{D,T}) where {D,T}
@@ -374,6 +415,13 @@ function /(a::NTuple{D,T},c::T) where {D,T}
 end
 
 function /(u::VectorField{D,T,N},v::VectorField{D,T,N}) where {D,T,N}
+  @assert size(u) == size(v) "Incompatible field sizes"
+  data = similar(getfield(u,:data))
+  map!((a,b)->a/b,data,getfield(u,:data),getfield(v,:data))
+  return VectorField{D,T,N}(data)
+end
+
+function /(u::VectorField{D,T,N},v::ScalarField{T,N}) where {D,T,N}
   @assert size(u) == size(v) "Incompatible field sizes"
   data = similar(getfield(u,:data))
   map!((a,b)->a/b,data,getfield(u,:data),getfield(v,:data))
