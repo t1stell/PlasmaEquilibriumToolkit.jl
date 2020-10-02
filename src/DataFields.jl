@@ -355,7 +355,7 @@ function -(a::NTuple{D,T},b::T) where {D,T}
   return a - b
 end
 
-function +(b::T,a::NTuple{D,T}) where {D,T}
+function -(b::T,a::NTuple{D,T}) where {D,T}
   return b - a
 end
 
@@ -392,7 +392,7 @@ function *(u::AbstractDataField,v::AbstractArray{T,N}) where {T,N}
   return typeof(u)(data)
 end
 
-function *(v::AbstractArray{T,N},u::AbstractDatField) where {T,N}
+function *(v::AbstractArray{T,N},u::AbstractDataField) where {T,N}
   return u*v
 end
 
@@ -402,7 +402,7 @@ function *(u::AbstractDataField,v::T) where T
   return VectorField{D,T,N}(data)
 end
 
-function *(v::T,u::AbstractFieldData) where T
+function *(v::T,u::AbstractDataField) where T
   return u*v
 end
 
