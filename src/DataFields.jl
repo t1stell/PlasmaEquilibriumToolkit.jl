@@ -396,10 +396,10 @@ function *(v::AbstractArray{T,N},u::AbstractDataField) where {T,N}
   return u*v
 end
 
-function *(u::AbstractDataField,v::T) where T
+function *(u::AbstractDataField{T,N},v::T) where {T,N}
   data = similar(getfield(u,:data))
   map!(a->v*a,data,getfield(u,:data))
-  return VectorField{D,T,N}(data)
+  return typeof(u)(data)
 end
 
 function *(v::T,u::AbstractDataField) where T

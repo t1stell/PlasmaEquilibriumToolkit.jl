@@ -105,7 +105,7 @@ at each point along a field line on a magnetic surface `s`, labeled by `α`, par
 See also: [`computeVmecVectors`](@ref), [`PestCoordinates`](@ref), [`SThetaZetaCoordinates`](@ref)
 """
 function computePestVectors(vmec::VMEC.VmecData,surface::Float64,alpha::Float64,zeta::Vector{Float64})
-  vmecVectorArgs = basisS_vmec, basisThetaVmec_vmec, basisZeta_vmec, R, Z, J, coords = computeVmecBasis(vmec,surface,alpha,zeta) 
+  vmecVectorArgs = basisS_vmec, basisThetaVmec_vmec, basisZeta_vmec, R, Z, J, coords = computeVmecDerivatives(vmec,surface,alpha,zeta) 
   vmecVectors = computeVmecVectors(vmecVectorArgs...)
 
   edgeFlux2Pi = vmec.phi[vmec.ns]*vmec.signgs/(2*π) 
