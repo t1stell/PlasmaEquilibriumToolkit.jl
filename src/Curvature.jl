@@ -40,16 +40,16 @@ function curvatureComponents(basisVectors::AbstractCoordinateField{D,T,N},vmecVe
   norm = abs(gradX).*abs(gradY)
   #dBdx = Threads.@spawn mu0*VMEC.dPdS(s,vmec)./(Bmag.*Bmag) .- 
   #       dot(B,cross(gradB,gradY)) ./ Bmag
-  dBdx = Threads.@spawn -dot(B,cross(grad_B,gradY)) ./ Bmag
-  dBdy = Threads.@spawn -dot(B,cross(grad_B,gradX)) ./ Bmag
+  dBdx = Threads.@spawn -dot(B,cross(grad_B,gradY)) ./ (Bmag.*abs(gradY))
+  dBdy = Threads.@spawn -dot(B,cross(grad_B,gradX)) ./ (Bmag.*abs(gradX))
 
   sinGradXGradY = Threads.@spawn abs(cross(gradX,gradY))./norm
   cosGradXGradY = Threads.@spawn abs.(dot(gradX,gradY))./norm
                   
   normalCurvature = fetch(dBdx) .* abs(gradX) .+ fetch(dBdy) .* abs(gradY) .* fetch(cosGradXGradY)
-  geodesicCurvature = fetch(dBdy) .* abs(gradY) .* fetch(sinGradXGradY)
+  #geodesicCurvature = fetch(dBdy) .* abs(gradY) .* fetch(sinGradXGradY)
   
-  return normalCurvature, geodesicCurvature
+  return fetch(dBdX),fetch(dBdY)
 
 end
 
