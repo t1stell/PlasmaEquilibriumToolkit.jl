@@ -1,4 +1,3 @@
-using StaticArrays
 using CoordinateTransformations
 
 abstract type MagneticEquilibrium end;
@@ -66,5 +65,3 @@ end
 
 Base.show(io::IO, x::BoozerCoordinates) = print(io, "PestCoordinates(s=$(x.ψ), α=$(x.χ), ζ=$(x.ζ))")
 Base.isapprox(x1::BoozerCoordinates, x2::BoozerCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.χ,x2.χ;kwargs...) && isapprox(x1.ζ,x2.ζ;kwargs...)
-
-const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where T
