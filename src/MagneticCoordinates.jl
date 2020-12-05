@@ -1,6 +1,17 @@
 using CoordinateTransformations
 
+"""
+    MagneticEquilibrium
+
+Abstract supertype for different magnetic equilibrium representations (VMEC, SPEC,...).
+"""
 abstract type MagneticEquilibrium end;
+
+"""
+    MagneticCoordinates
+
+Abstract supertype for different magnetic coordinates.
+"""
 abstract type MagneticCoordinates end;
 
 """

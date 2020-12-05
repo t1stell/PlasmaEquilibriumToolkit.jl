@@ -1,6 +1,8 @@
 import Base.abs
 using LinearAlgebra
 
+#Define the singleton types for the coordinate transformations.  All transformations are
+#subtypes of the abstract supertype Transformation provided by CoordinateTransformations.jl.
 struct FluxFromPest <: Transformation; end
 struct PestFromFlux <: Transformation; end
 struct CylindricalFromFlux <: Transformation; end
@@ -9,9 +11,21 @@ struct CartesianFromFlux <: Transformation; end
 struct CartesianFromPest <: Transformation; end
 struct ContravariantFromCovariant <: Transformation; end
 struct CovariantFromContravariant <: Transformation; end
+
+#Define the singleton types 
 struct Covariant end
 struct Contravariant end
 
+"""
+    abs(e::BasisVectors{T}[,component=0)
+
+Compute the L2 norm of `e`.  If `component` > 0 and <= 3, the L2 norm of the component is returned.
+
+#  Examples
+```jldoctest
+julia> 
+```
+"""
 function abs(e::BasisVectors{T},component::Int=0) where T
   if component > 0 && component <= 3
     return norm(e[:,component])

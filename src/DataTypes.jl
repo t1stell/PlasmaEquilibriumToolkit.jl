@@ -1,6 +1,29 @@
 using StaticArrays
 
+"""
+    CoordinateVector{T} <: SVector{3,T}
+
+Convenience type for defining a 3-element StaticVector.
+"""
 const CoordinateVector{T} = SVector{3,T} where T
+
+"""
+    BasisVectors{T} <: SArray{Tuple{3,3},T,2,9}
+
+Convenience type for defining the Cartesian coordinate representation of 3D curvilinear vector fields.
+For a vector defined by inverse map ``R(x,y,z) = (U(x,y,z),V(x,y,z),W(x,y,z))``, the components are
+represented by the 3×3 SArray:
+
+`R = [Ux Uy Uz;Vx Vy Vz;Wx Wy Wz]`
+
+where `Ux` is the `x`-component of `U`.
+# Examples
+```julia-repl
+julia> using StaticArrays
+julia> typeof(@SArray(ones(3,3))) <: BasisVectors{Float64}
+true
+```
+"""
 const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where T
 
 #=
