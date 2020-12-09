@@ -14,7 +14,7 @@ Convenience type for defining the Cartesian coordinate representation of 3D curv
 For a vector defined by inverse map ``R(x,y,z) = (U(x,y,z),V(x,y,z),W(x,y,z))``, the components are
 represented by the 3×3 SArray:
 
-`R = [Ux Uy Uz;Vx Vy Vz;Wx Wy Wz]`
+`R = [Ux Vx Wx;Uy Vy Wy;Uz Vz Wz]`
 
 where `Ux` is the `x`-component of `U`.
 # Examples
