@@ -64,10 +64,6 @@ function jacobian(::Contravariant, e::BasisVectors{T}) where T
   return 1.0 /dot(e[:,1],cross(e[:,2],e[:,3]))
 end
 
-
-"""
-transform_basis()
-"""
 function transform_basis(::ContravariantFromCovariant,e::BasisVectors{T},J::T) where T
   grad_1 = cross(e[:,2],e[:,3])/J
   grad_2 = cross(e[:,3],e[:,1])/J
