@@ -4,6 +4,13 @@ abstract type MagneticEquilibrium end;
 abstract type MagneticCoordinates end;
 
 """
+    NullEquilibrium()
+
+Empty subtype of MagneticEquilibrium to represent no equilibrium
+"""
+struct NullEquilibrium <: MagneticEquilibrium end
+
+"""
     FluxCoordinates{T,A}(s::T,θ::A,ζ::A) <: MagneticCoordinates
 
 Coordinates on a magnetic flux surface, where `s` is the surface label and

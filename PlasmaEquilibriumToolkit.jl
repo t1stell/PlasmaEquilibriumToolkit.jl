@@ -1,7 +1,7 @@
 module PlasmaEquilibriumToolkit
 
 export AbstractMagneticGeometry, MagneticGeometry
-export MagneticEquilibrium, MagneticCoordinates
+export MagneticEquilibrium, MagneticCoordinates, NullEquilibrium
 export FluxCoordinates, PestCoordinates, BoozerCoordinates
 export FluxFromPest, PestFromFlux, CylindricalFromFlux, CylindricalFromPest
 export CartesianFromFlux, CartesianFromPest
