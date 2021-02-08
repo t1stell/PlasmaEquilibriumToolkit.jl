@@ -26,6 +26,48 @@ true
 """
 const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where T
 
+abstract type AbstractMagneticGeometry end;
+abstract type MagneticGeometry <: AbstractMagneticGeometry end;
+
+struct AbstractMagneticSurface <: AbstractMagneticGeometry
+  eqType::Type
+  surfaceLabel::Float64
+end
+
+struct MagneticSurface <: MagneticGeometry
+  eq::MagneticEquilibrium
+  coords::AbstractArray{MagneticCoordinates}
+  MagneticSurface() = new()
+  MagneticSurface(e::eqType,c::Union{coordType,AbstractArray{coordType}}) where {eqType <: MagneticEquilibrium, coordType <: MagneticCoordinates} = new(e,c)
+end
+
+struct AbstractMagneticFieldline <: AbstractMagneticGeometry
+  eqType::Type
+  surfaceLabel::Float64
+  fieldlineLabel::Float64
+  toroidalAngle::Float64
+end
+
+struct MagneticFieldline <: MagneticGeometry
+  eq::MagneticEquilibrium
+  coordinates::AbstractVector{MagneticCoordinates}
+  MagneticFieldline() = new()
+  MagneticFieldline(e::eqType,c::Union{coordType,AbstractArray{coordType}}) where {eqType <: MagneticEquilibrium, coordType <: MagneticCoordinates} = new(e,c)
+end
+
+function MagneticSurface(eqType::Type,surface)
+  @assert isstructtype(eqType) && eqType <: MagneticEquilibrium "$(eqType) is not a MagneticEquilibrium type!"
+  @assert convert(Float64,surface) >= 0.0 "The surface label must be >= 0.0"
+  return AbstractMagneticSurface(eqType,convert(Float64,surface))
+end
+
+function MagneticFieldline(eqType::Type,surface,label,toroidalAngle=0.0)
+  @assert isstructtype(eqType) && eqType <: MagneticEquilibrium "$(eqType) is not a MagneticEquilibrium type!"
+  @assert convert(Float64,surface) >= 0.0 "The surface label must be >= 0.0"
+  @assert convert(Float64,abs(label)) <= 2π "The fieldline label at zero toroidal angle must be <= 2π"
+  @assert convert(Float64,abs(toroidalAngle)) <= 2π "The initial toroidal angle must be <= 2π"
+  return AbstractMagneticFieldline(eqType,convert(Float64,surface),convert(Float64,label),convert(Float64,toroidalAngle))
+end
 #=
 function eq_typeof(eq::MagneticEquilibrium)
   if occursin("Vmec",string(typeof(eq)))
@@ -34,6 +76,7 @@ function eq_typeof(eq::MagneticEquilibrium)
     return :spec
   end
 end
+
 
 struct MagneticSurface
   eqType::Symbol

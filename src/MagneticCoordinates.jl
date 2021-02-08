@@ -15,45 +15,52 @@ Abstract supertype for different magnetic coordinates.
 abstract type MagneticCoordinates end;
 
 """
-    FluxCoordinates{T,A}(s::T,θ::A,ζ::A) <: MagneticCoordinates
+    NullEquilibrium()
 
-Coordinates on a magnetic flux surface, where `s` is the surface label and
-`θ` and `ζ` are angle-like variables
+Empty subtype of MagneticEquilibrium to represent no equilibrium
+"""
+struct NullEquilibrium <: MagneticEquilibrium end
+
+"""
+    FluxCoordinates{T,A}(ψ::T,θ::A,ζ::A) <: MagneticCoordinates
+
+Coordinates on a magnetic flux surface, where `ψ` is the physical toroidal flux
+divided by 2π and `θ` and `ζ` are angle-like variables
 """
 struct FluxCoordinates{T <: Real,A <: Real} <: MagneticCoordinates
-  s::T
+  ψ::T
   θ::A
   ζ::A
-  FluxCoordinates{T,A}(s::T,θ::A,ζ::A) where {T,A} = new(s,θ,ζ)
+  FluxCoordinates{T,A}(ψ::T,θ::A,ζ::A) where {T,A} = new(ψ,θ,ζ)
 end
 
-function FluxCoordinates(s,θ,ζ)
-  s2, θ2, ζ2 = promote(s,θ,ζ)
-  return FluxCoordinates{typeof(s2),typeof(θ2)}(s2,θ2,ζ2)
+function FluxCoordinates(ψ,θ,ζ)
+  ψ2, θ2, ζ2 = promote(ψ,θ,ζ)
+  return FluxCoordinates{typeof(ψ2),typeof(θ2)}(ψ2,θ2,ζ2)
 end
 
 """
-    FluxCoordinates(s,θ,ζ::AbstractVector)
+    FluxCoordinates(ψ,θ,ζ::AbstractVector)
 
 Generate a `Vector{FluxCoordinates}` given by `(s,θ,ζⱼ)` where `ζⱼ` is the `j`-th entry of `ζ`.
 """
-function FluxCoordinates(s,θ,ζ::AbstractVector)
+function FluxCoordinates(ψ,θ,ζ::AbstractVector)
   coords = Vector{FluxCoordinates}(undef,length(ζ))
-  map!(z->FluxCoordinates(s,θ,z),coords,ζ)
+  map!(z->FluxCoordinates(ψ,θ,z),coords,ζ)
   return coords
 end
 
 """
-    FluxCoordinates(s,θ::AbstractVector,ζ::AbstractVector)
+    FluxCoordinates(ψ,θ::AbstractVector,ζ::AbstractVector)
 
-Generate a grid of `FluxCoordinates` given by `(s,θᵢ,ζⱼ)` is the `i`-th entry of `θ` and
+Generate a grid of `FluxCoordinates` given by `(ψ,θᵢ,ζⱼ)` is the `i`-th entry of `θ` and
 `ζⱼ` is the `j`-th entry of `ζ`.
 """
-function FluxCoordinates(s,θ::AbstractVector,ζ::AbstractVector)
+function FluxCoordinates(ψ,θ::AbstractVector,ζ::AbstractVector)
   coords = Matrix{FluxCoordinates}(undef,length(ζ),length(θ))
   for t = 1:length(θ)
     for z = 1:length(ζ)
-      @inbounds coords[z,t] = FluxCoordinates(s,θ[t],ζ[z])
+      @inbounds coords[z,t] = FluxCoordinates(ψ,θ[t],ζ[z])
     end
   end
   return coords
@@ -61,29 +68,29 @@ end
 
 
 """
-    FluxCoordinates(s,θ::AbstractMatrix,ζ::AbstractMatrix)
+    FluxCoordinates(ψ,θ::AbstractMatrix,ζ::AbstractMatrix)
 
-Generate a grid of `FluxCoordinates` given by `(s,θᵢⱼ,ζᵢⱼ)` where `θ(ζ)ᵢⱼ` is the `ij`-entry of the `θ(ζ)` matrix.
+Generate a grid of `FluxCoordinates` given by `(ψ,θᵢⱼ,ζᵢⱼ)` where `θ(ζ)ᵢⱼ` is the `ij`-entry of the `θ(ζ)` matrix.
 """
-function FluxCoordinates(s,θ::AbstractMatrix,ζ::AbstractMatrix)
+function FluxCoordinates(ψ,θ::AbstractMatrix,ζ::AbstractMatrix)
   @assert size(θ) == size(ζ) "Incompatible sizes"
   coords = Matrix{FluxCoordinates}(undef,size(θ))
-  map!((t,z)->FluxCoordinates(s,t,z),coords,θ,ζ)
+  map!((t,z)->FluxCoordinates(ψ,t,z),coords,θ,ζ)
   return coords
 end
 
 """
-    FluxCoordinates(s::AbstractVector,θ::AbstractVector,ζ::AbstractVector)
+    FluxCoordinates(ψ::AbstractVector,θ::AbstractVector,ζ::AbstractVector)
 
-Generate a 3D grid of `FluxCoordinates` given by `(sᵢ,θⱼ,ζₖ)` where `sᵢ` is the `i`-th entry of `s`,
+Generate a 3D grid of `FluxCoordinates` given by `(ψᵢ,θⱼ,ζₖ)` where `ψᵢ` is the `i`-th entry of `ψ`,
 `θⱼ` is the `j`-th entry of `θ` and `ζₖ` is the `k`-th entry of `ζ`.
 """
 function FluxCoordinates(s::AbstractVector,θ::AbstractVector,ζ::AbstractVector)
-  coords = Array{FluxCoordinates,3}(undef,length(ζ),length(θ),length(s))
-  for k = 1:length(s)
+  coords = Array{FluxCoordinates,3}(undef,length(ζ),length(θ),length(ψ))
+  for k = 1:length(ψ)
     for t = 1:length(θ)
       for z = 1:length(ζ)
-        @inbounds coords[z,t,k] = FluxCoordinates(s[k],θ[t],ζ[z])
+        @inbounds coords[z,t,k] = FluxCoordinates(ψ[k],θ[t],ζ[z])
       end
     end
   end
@@ -91,18 +98,18 @@ function FluxCoordinates(s::AbstractVector,θ::AbstractVector,ζ::AbstractVector
 end
 
 """
-    FluxCoordinates(s::AbstractVector,θ::AbstractMatrix,ζ::AbstractMatrix)
+    FluxCoordinates(ψ::AbstractVector,θ::AbstractMatrix,ζ::AbstractMatrix)
 
-Generate a 3D grid of `FluxCoordinates` given by `(sᵢ,θⱼₖ,ζⱼₖ)` where `sᵢ` is the `i`-th entry of `s`,
+Generate a 3D grid of `FluxCoordinates` given by `(ψᵢ,θⱼₖ,ζⱼₖ)` where `ψᵢ` is the `i`-th entry of `s`,
 `θⱼₖ(ζⱼₖ)` is the `jk`-th entry of `θ(ζ)`.
 """
-function FluxCoordinates(s::AbstractVector,θ::AbstractMatrix,ζ::AbstractMatrix)
+function FluxCoordinates(ψ::AbstractVector,θ::AbstractMatrix,ζ::AbstractMatrix)
   @assert size(θ) == size(ζ) "Incompatible sizes"
-  coords = Array{FluxCoordinates,3}(undef,(size(θ)...,length(s)))
-  for k = 1:length(s)
+  coords = Array{FluxCoordinates,3}(undef,(size(θ)...,length(ψ)))
+  for k = 1:length(ψ)
     for j = 1:size(θ,2)
       for i = 1:size(θ,1)
-        coords[i,j,k] = FluxCoordinates(s[k],θ[i,j],ζ[i,j])
+        coords[i,j,k] = FluxCoordinates(ψ[k],θ[i,j],ζ[i,j])
       end
     end
   end
@@ -110,26 +117,27 @@ function FluxCoordinates(s::AbstractVector,θ::AbstractMatrix,ζ::AbstractMatrix
 end
 
 """
-    FluxCoordinates(s::AbstractArray{T,3},θ::AbstractArray{T,3},ζ::AbstractArray{T,3})
+    FluxCoordinates(ψ::AbstractArray{T,3},θ::AbstractArray{T,3},ζ::AbstractArray{T,3})
 
-Generate a 3D grid of `FluxCoordinates` given by `(sᵢⱼₖ,θᵢⱼₖ,ζᵢⱼₖ)` where `sᵢⱼₖ` is the `ijk`-th entry of `s`,
+Generate a 3D grid of `FluxCoordinates` given by `(ψᵢⱼₖ,θᵢⱼₖ,ζᵢⱼₖ)` where `ψᵢⱼₖ` is the `ijk`-th entry of `s`,
 `θᵢⱼₖ` is the `ijk`-th entry of `θ` and  `ζᵢⱼₖ` is the `ijk`-th entry of `ζ`.
 """
-function FluxCoordinates(s::AbstractArray{T,3},θ::AbstractArray{T,3},ζ::AbstractArray{T,3}) where T
-  @assert size(s) == size(θ) == size(ζ) "Incompatible sizes"
-  coords = Array{FluxCoordinates,3}(undef,size(s))
-  map!((s,t,z)->FluxCoordinates(s,t,z),coords,s,θ,ζ)
+function FluxCoordinates(ψ::AbstractArray{T,3},θ::AbstractArray{T,3},ζ::AbstractArray{T,3}) where T
+  @assert size(ψ) == size(θ) == size(ζ) "Incompatible sizes"
+  coords = Array{FluxCoordinates,3}(undef,size(ψ))
+  map!((s,t,z)->FluxCoordinates(s,t,z),coords,ψ,θ,ζ)
   return coords
 end
 
-Base.show(io::IO, x::FluxCoordinates) = print(io, "FluxCoordinates(s=$(x.s), θ=$(x.θ), ζ=$(x.ζ))")
-Base.isapprox(x1::FluxCoordinates, x2::FluxCoordinates; kwargs...) = isapprox(x1.s,x2.s;kwargs...) && isapprox(x1.θ,x2.θ;kwargs...) && isapprox(x1.ζ,x2.ζ;kwargs...)
+Base.show(io::IO, x::FluxCoordinates) = print(io, "FluxCoordinates(ψ=$(x.ψ), θ=$(x.θ), ζ=$(x.ζ))")
+Base.isapprox(x1::FluxCoordinates, x2::FluxCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.θ,x2.θ;kwargs...) && isapprox(x1.ζ,x2.ζ;kwargs...)
 
 """
-    PestCoordinates{T,A}(s::T,θ::A,ζ::A) <: MagneticCoordinates
+    PestCoordinates{T,A}(ψ::T,α::A,ζ::A) <: MagneticCoordinates
 
-Coordinates on a magnetic flux surface, where `s` is the surface label and
-`θ` and `ζ` are angle-like variables
+Coordinates on a magnetic flux surface, where `ψ` is the toroidal flux divided by 2π
+in the clockwise direction, `α` is the field line label, and `ζ` is the geometric toroidal
+angle advancing the clockwise direction.
 """
 struct PestCoordinates{T <: Real,A <: Real} <: MagneticCoordinates
   ψ::T
@@ -232,7 +240,7 @@ function PestCoordinates(ψ::AbstractArray{T,3},α::AbstractArray{T,3},ζ::Abstr
   return coords
 end
 
-Base.show(io::IO, x::PestCoordinates) = print(io, "PestCoordinates(s=$(x.ψ), α=$(x.α), ζ=$(x.ζ))")
+Base.show(io::IO, x::PestCoordinates) = print(io, "PestCoordinates(ψ=$(x.ψ), α=$(x.α), ζ=$(x.ζ))")
 Base.isapprox(x1::PestCoordinates, x2::PestCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.α,x2.α;kwargs...) && isapprox(x1.ζ,x2.ζ;kwargs...)
 
 """
@@ -342,5 +350,5 @@ function BoozerCoordinates(ψ::AbstractArray{T,3},χ::AbstractArray{T,3},ϕ::Abs
   return coords
 end
 
-Base.show(io::IO, x::BoozerCoordinates) = print(io, "BoozerCoordinates(s=$(x.ψ), χ=$(x.χ), ϕ=$(x.ϕ))")
+Base.show(io::IO, x::BoozerCoordinates) = print(io, "BoozerCoordinates(ψ=$(x.ψ), χ=$(x.χ), ϕ=$(x.ϕ))")
 Base.isapprox(x1::BoozerCoordinates, x2::BoozerCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.χ,x2.χ;kwargs...) && isapprox(x1.ϕ,x2.ϕ;kwargs...)
