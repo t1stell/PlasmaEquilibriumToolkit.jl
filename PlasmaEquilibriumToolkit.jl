@@ -8,7 +8,7 @@ export CartesianFromFlux, CartesianFromPest
 export Covariant, Contravariant, CoordinateVector, BasisVectors
 export CovariantFromContravariant, ContravariantFromCovariant
 export covariant_basis, contravariant_basis, transform_basis, jacobian
-export gradB, curvatureComponents
+export gradB, gradBPerp, curvatureComponents, metric
 export AbstractMagneticSurface, MagneticSurface, AbstractMagneticFieldline, MagneticFieldline
 
 include("src/MagneticCoordinates.jl")
@@ -16,4 +16,6 @@ include("src/DataTypes.jl")
 include("src/Transformations.jl")
 include("src/DerivedQuantities.jl")
 
+# Specialzed coordinate defintions, transformations, routines for different codes
+include("src/Specializations.jl")
 end
