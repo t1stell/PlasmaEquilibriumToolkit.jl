@@ -1,16 +1,19 @@
 function gradB
 end
 
-function gradBPerp(e::BasisVectors,gradB::CoordinateVector)
-  #dB/dX = (B × ∇B)/B² ⋅ ∇Y
-  #dB/dY = -(B × ∇B)/B² ⋅ ∇X
+function curvatureProjection(e::BasisVectors,gradB::CoordinateVector)
+  #K1 = (B × ∇B)/B² ⋅ ∇X
+  #K2 = (B × ∇B)/B² ⋅ ∇Y
   B = cross(e[:,1],e[:,2])
   Bmag = norm(B)
-  dBdX = dot(cross(B,gradB),e[:,2])/Bmag^2
-  dBdY = -dot(cross(B,gradB),e[:,1])/Bmag^2
-  return dBdX, dBdY
+  K1 = dot(cross(B,gradB),e[:,1])/Bmag^2
+  K2 = dot(cross(B,gradB),e[:,2])/Bmag^2
+  return K1, K2
 end
-
+#∇B = dbdx ∇x + dbdy ∇y + dbdz ∇z
+#b = bx ∇x + by ∇y + bz ∇z
+#b × ∇B = dbdy*bx ∇x × ∇y + dbdz*bx ∇x × ∇z + dbdx*by ∇y × ∇x + dbdz*by ∇y × ∇z + dbdx*bz ∇z × ∇x + dbdy*bz ∇z × ∇y
+#b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
 function normalCurvature(B::CoordinateVector,gradB::CoordinateVector,gradX::CoordinateVector,gradY::CoordinateVector)
   # κₙ = (B × ∇B) ⋅ ((∇ψ⋅∇ψ)∇α - (∇ψ⋅∇α)∇ψ)/(B³|∇ψ|)
   return dot(cross(B,gradB),gradY*dot(gradX,gradX) .- gradX*dot(gradX,gradY))/(norm(B)^3*norm(gradX))
