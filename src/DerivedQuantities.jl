@@ -23,16 +23,20 @@ function Bfield(e::BasisVectors)
   return Bfield(Contravariant(),e)
 end
 
-function Bnorm(x::MC,eq::AbstractMagneticEquilibrium) where MC <: AbstractMagneticCoordinates
+function Bnorm(x::MC,eq::ET) where MC <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
   throw(ArgumentError("Bnorm with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented"))
 end
 
 function Bfield(x::MC,eq::EC) where MC <: AbstractMagneticCoordinates where EC <: AbstractMagneticEquilibrium
-  throw(MethodError(Bfield,x,eq))
+  throw(ArgumentError("Bfield with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented"))
 end
 
 function gradB(x::MC,eq::ET) where MC <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
-  throw(MethodError(gradB, x, eq))
+  throw(ArgumentError("gradB with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented")
+end
+
+function jacobian(x::MC,eq::ET) where MC <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
+  throw(ArgumentError("jacobian with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented"))
 end
 
 """
