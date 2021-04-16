@@ -1,5 +1,38 @@
 
-function gradB
+function Bnorm(::Contravariant,e::BasisVectors)
+  return norm(cross(e[:,1],e[:,2]),2)
+end
+
+function Bnorm(::Covariant,e::BasisVectors,ι::Real)
+  return norm(1.0/jacobian(Covariant(),e)*(e[:,3] + ι*e[:,2]),2)
+end
+
+function Bnorm(e::BasisVectors)
+  return Bnorm(Contravariant(),e)
+end
+
+function Bfield(::Contravariant,e::BasisVectors)
+  return cross(e[:,1],e[:,2])
+end
+
+function Bfield(::Covariant,e::BasisVectors,ι::Real)
+  return 1.0/jacobian(Covariant(),e)*(e[:,3] + ι*e[:,2])
+end
+
+function Bfield(e::BasisVectors)
+  return Bfield(Contravariant(),e)
+end
+
+function Bnorm(x::MC,eq::AbstractMagneticEquilibrium) where MC <: AbstractMagneticCoordinates
+  throw(ArgumentError("Bnorm with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented"))
+end
+
+function Bfield(x::MC,eq::EC) where MC <: AbstractMagneticCoordinates where EC <: AbstractMagneticEquilibrium
+  throw(MethodError(Bfield,x,eq))
+end
+
+function gradB(x::MC,eq::ET) where MC <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
+  throw(MethodError(gradB, x, eq))
 end
 
 """
@@ -35,7 +68,7 @@ end
 
 """
     geodesicCurvature(b::CoordinateVector,gradB::CoordinateVector,gradX::CoordinateVector)
-    
+
 Computes the geodesic curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κ_g = -(B × ∇B) ⋅ ∇X/(B²|∇X|)
 """
@@ -57,11 +90,40 @@ function curvatureComponents(contravariantBasis::BasisVectors,gradB::CoordinateV
   return normalCurvature(B,gradB,contravariantBasis[:,1],contravariantBasis[:,2]), geodesicCurvature(B,gradB,contravariantBasis[:,1])
 end
 
-"""
-    metric(e::BasisVectors)
+function curvatureComponents(contravariantBasis::AbstractArray{BasisVectors{T}},∇B::AbstractArray{CoordinateVector{T}}) where T
+  size(contravariantBasis) == size(∇B) || throw(DimensionMismatch("Basis vectors and ∇B arays must have the same size"))
+  res = Array{NTuple{2,T}}(undef,size(gradB))
+  @inbounds @simd for i = 1:length(res)
+    res[i] = curvatureComponents(contravariantBasis[i],∇B[i])
+  end
+  return res
+end
 
-Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in 6 element tuple: (g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…)
 """
+    metric2(e::BasisVectors)
+
+Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…]
+"""
+function metric(e::BasisVectors,i::Integer,j::Integer)
+  return dot(e[:,i],e[:,j])
+end
+
 function metric(e::BasisVectors)
-  return dot(e[:,1],e[:,1]), dot(e[:,1],e[:,2]), dot(e[:,2],e[:,2]), dot(e[:,1],e[:,3]), dot(e[:,2],e[:,3]), dot(e[:,3],e[:,3])
+  return SVector(dot(e[:,1],e[:,1]), dot(e[:,1],e[:,2]), dot(e[:,2],e[:,2]), dot(e[:,1],e[:,3]), dot(e[:,2],e[:,3]), dot(e[:,3],e[:,3]))
+end
+
+function metric(e::AbstractArray{BasisVectors{T}}) where T
+  res = Array{SVector{6,T}}(undef,size(e))
+  @inbounds @simd for i = 1:length(res)
+    res[i] = metric(e[i])
+  end
+  return res
+end
+
+function metric(e::AbstractArray{BasisVectors{T}},u::Integer,v::Integer) where T
+  res = Array{T}(undef,size(e))
+  @inbounds @simd for i = 1:length(res)
+    res[i] = metric(e[i],u,v)
+  end
+  return res
 end

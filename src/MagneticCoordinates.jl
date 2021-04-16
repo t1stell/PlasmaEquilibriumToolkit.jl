@@ -1,25 +1,41 @@
-using CoordinateTransformations
-
 """
-    MagneticEquilibrium
+    AbstractMagneticEquilibrium
 
 Abstract supertype for different magnetic equilibrium representations (VMEC, SPEC,...).
 """
-abstract type MagneticEquilibrium end;
+abstract type AbstractMagneticEquilibrium end;
 
 """
-    MagneticCoordinates
+    AbstractMagneticCoordinates
 
 Abstract supertype for different magnetic coordinates.
 """
-abstract type MagneticCoordinates end;
+abstract type AbstractMagneticCoordinates end;
 
 """
     NullEquilibrium()
 
 Empty subtype of MagneticEquilibrium to represent no equilibrium
 """
-struct NullEquilibrium <: MagneticEquilibrium end
+struct NullEquilibrium <: AbstractMagneticEquilibrium end
+
+"""
+    ClebschCoordinates(α,β,η)
+
+Coordintes `(α,β,η)` representing a divergence-free magnetic field ``B = ∇α×∇β``
+with a Jacobian defined by ``√g = 1/(∇η ⋅ ∇α × ∇β)``.
+"""
+struct ClebschCoordinates{T <: Real} <: AbstractMagneticCoordinates
+  α::T
+  β::T
+  η::T
+  ClebschCoordinates{T}(α::T,β::T,η::T) where {T} = new(α,β,η)
+end
+
+function ClebschCoordinates(α,β,η)
+  α2,β2,ζ2 = promote(α,β,η)
+  return ClebschCoordinates{typeof(α2)}(α2,β2,η2)
+end
 
 """
     FluxCoordinates{T,A}(ψ::T,θ::A,ζ::A) <: MagneticCoordinates
@@ -27,7 +43,7 @@ struct NullEquilibrium <: MagneticEquilibrium end
 Coordinates on a magnetic flux surface, where `ψ` is the physical toroidal flux
 divided by 2π and `θ` and `ζ` are angle-like variables
 """
-struct FluxCoordinates{T <: Real,A <: Real} <: MagneticCoordinates
+struct FluxCoordinates{T <: Real,A <: Real} <: AbstractMagneticCoordinates
   ψ::T
   θ::A
   ζ::A
@@ -38,7 +54,7 @@ function FluxCoordinates(ψ,θ,ζ)
   ψ2, θ2, ζ2 = promote(ψ,θ,ζ)
   return FluxCoordinates{typeof(ψ2),typeof(θ2)}(ψ2,θ2,ζ2)
 end
-
+#=
 """
     FluxCoordinates(ψ,θ,ζ::AbstractVector)
 
@@ -128,7 +144,7 @@ function FluxCoordinates(ψ::AbstractArray{T,3},θ::AbstractArray{T,3},ζ::Abstr
   map!((s,t,z)->FluxCoordinates(s,t,z),coords,ψ,θ,ζ)
   return coords
 end
-
+=#
 Base.show(io::IO, x::FluxCoordinates) = print(io, "FluxCoordinates(ψ=$(x.ψ), θ=$(x.θ), ζ=$(x.ζ))")
 Base.isapprox(x1::FluxCoordinates, x2::FluxCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.θ,x2.θ;kwargs...) && isapprox(x1.ζ,x2.ζ;kwargs...)
 
@@ -139,7 +155,7 @@ Coordinates on a magnetic flux surface, where `ψ` is the toroidal flux divided 
 in the clockwise direction, `α` is the field line label, and `ζ` is the geometric toroidal
 angle advancing the clockwise direction.
 """
-struct PestCoordinates{T <: Real,A <: Real} <: MagneticCoordinates
+struct PestCoordinates{T <: Real,A <: Real} <: AbstractMagneticCoordinates
   ψ::T
   α::A
   ζ::A
@@ -150,7 +166,7 @@ function PestCoordinates(ψ,α,ζ)
   ψ2, α2, ζ2 = promote(ψ,α,ζ)
   return PestCoordinates{typeof(ψ2),typeof(α2)}(ψ2,α2,ζ2)
 end
-
+#=
 """
     PestCoordinates(ψ,α,ζ::AbstractVector)
 
@@ -239,7 +255,7 @@ function PestCoordinates(ψ::AbstractArray{T,3},α::AbstractArray{T,3},ζ::Abstr
   map!((s,a,z)->PestCoordinates(s,a,z),coords,ψ,α,ζ)
   return coords
 end
-
+=#
 Base.show(io::IO, x::PestCoordinates) = print(io, "PestCoordinates(ψ=$(x.ψ), α=$(x.α), ζ=$(x.ζ))")
 Base.isapprox(x1::PestCoordinates, x2::PestCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.α,x2.α;kwargs...) && isapprox(x1.ζ,x2.ζ;kwargs...)
 
@@ -249,7 +265,7 @@ Base.isapprox(x1::PestCoordinates, x2::PestCoordinates; kwargs...) = isapprox(x1
 Coordinates on a magnetic flux surface, where `ψ` is the flux label and
 `χ` and `ϕ` are angle-like variables
 """
-struct BoozerCoordinates{T <: Real,A <: Real} <: MagneticCoordinates
+struct BoozerCoordinates{T <: Real,A <: Real} <: AbstractMagneticCoordinates
   ψ::T
   χ::A
   ϕ::A
@@ -260,7 +276,7 @@ function BoozerCoordinates(ψ,χ,ϕ)
   ψ2, χ2, ϕ2 = promote(ψ,χ,ϕ)
   return BoozerCoordinates{typeof(ψ2),typeof(χ2)}(ψ2,χ2,ϕ2)
 end
-
+#=
 """
     BoozerCoordinates(ψ,χ,ϕ::AbstractVector)
 
@@ -349,6 +365,6 @@ function BoozerCoordinates(ψ::AbstractArray{T,3},χ::AbstractArray{T,3},ϕ::Abs
   map!((s,x,z)->BoozerCoordinates(s,x,z),coords,ψ,χ,ϕ)
   return coords
 end
-
+=#
 Base.show(io::IO, x::BoozerCoordinates) = print(io, "BoozerCoordinates(ψ=$(x.ψ), χ=$(x.χ), ϕ=$(x.ϕ))")
 Base.isapprox(x1::BoozerCoordinates, x2::BoozerCoordinates; kwargs...) = isapprox(x1.ψ,x2.ψ;kwargs...) && isapprox(x1.χ,x2.χ;kwargs...) && isapprox(x1.ϕ,x2.ϕ;kwargs...)
