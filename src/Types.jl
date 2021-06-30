@@ -1,9 +1,30 @@
+
+"""
+    AbstractMagneticEquilibrium
+
+Abstract supertype for different magnetic equilibrium representations (VMEC, SPEC,...).
+"""
+abstract type AbstractMagneticEquilibrium end;
+
+"""
+    AbstractMagneticCoordinates
+
+Abstract supertype for different magnetic coordinates.
+"""
+abstract type AbstractMagneticCoordinates end;
+
+"""
+    NullEquilibrium()
+
+Empty subtype of MagneticEquilibrium to represent no equilibrium
+"""
+struct NullEquilibrium <: AbstractMagneticEquilibrium end
+
 """
     CoordinateVector{T} <: SVector{3,T}
-
 Convenience type for defining a 3-element StaticVector.
 """
-const CoordinateVector{T} = SVector{3,T} where T
+const CoordinateVector{T} = SVector{3,T} where {T}
 
 """
     BasisVectors{T} <: SArray{Tuple{3,3},T,2,9}
@@ -22,7 +43,7 @@ julia> typeof(@SArray(ones(3,3))) <: BasisVectors{Float64}
 true
 ```
 """
-const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where T
+const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where {T}
 
 abstract type BasisType end
 
@@ -35,17 +56,53 @@ abstract type MagneticGeometry <: AbstractMagneticGeometry end;
 
 struct AbstractMagneticSurface <: AbstractMagneticGeometry
   eqType::Type
-  surfaceLabel::Float64
+  surfaceLabel::AbstractFloat
 end
 
+macro interpolate_array(coord_type, args...)
+  names = fieldnames(eval(coord_type))
+  kwargs = Expr[]
+  for (name, arg) in zip(names, args)
+    push!(kwargs, Expr(:(kw), name, arg))
+  end
+  SA_expr = Expr(:(curly), :StructArray, coord_type)
+  #return :(StructArray{$coord_type}($kwargs...))
+  return esc(Expr(:call, SA_expr, kwargs...))
+end
+
+#=
+function MagneticCoordinateGrid(
+  C::CT,
+  x::AbstractVector,
+  y::AbstractVector,
+  z::AbstractVector;
+  interpolate = true,
+) where {CT<:AbstractMagneticCoordinates}
+  if !interpolate
+    (size(x) == size(y) && size(y) == size(z)) ||
+      throw(DimensionMismatch("Dimensions of input arrays do not match"))
+    coordType = typeof(C(first(x), first(y), first(z)))
+    grid = StructArray{coordType}(undef, size(x))
+    for i = 1:length(grid)
+      grid[i] = C(x[i], y[i], z[i])
+    end
+    return grid
+  else
+    return @interpolate_array(C, x, y, z)
+  end
+end
+=#
 #=
 struct MagneticSurface <: MagneticGeometry
   eq::MagneticEquilibrium
   coords::AbstractArray{AbstractMagneticCoordinates}
+  covariantBasis::AbstractArray
+  contravariantBasis::AbstractArray
   MagneticSurface() = new()
   MagneticSurface(e::eqType,c::Union{coordType,AbstractArray{coordType}}) where {eqType <: MagneticEquilibrium, coordType <: AbstractMagneticCoordinates} = new(e,c)
 end
-
+=#
+#=
 struct AbstractMagneticFieldline <: AbstractMagneticGeometry
   eqType::Type
   surfaceLabel::Float64
@@ -93,6 +150,7 @@ function MagneticCoordinateArray(C::Type{MC},α::Union{Real,AbstractVector{Real}
   end
 end
 =#
+#=
 struct MagneticFieldElement
   coordType::Type
   coords::AbstractMagneticCoordinates
@@ -107,201 +165,360 @@ struct MagneticFieldline
   ι::Float64
 end
 
-function Base.getindex(x::MagneticFieldline,I)
-  return Base.getindex(Base.getfield(x,:coords),I)
+function Base.getindex(x::MagneticFieldline, I)
+  return Base.getindex(Base.getfield(x, :coords), I)
 end
 
-function Base.setindex!(x::MagneticFieldline,val::MC,I) where MC <: AbstractMagneticCoordinates
-  Base.setindex!(getfield(x,:coords),val,I)
+function Base.setindex!(
+  x::MagneticFieldline,
+  val::MC,
+  I,
+) where {MC<:AbstractMagneticCoordinates}
+  Base.setindex!(getfield(x, :coords), val, I)
 end
 
-function Base.size(x::MagneticFieldline,d::Integer=0)
-  return d > 0 ? Base.size(getfield(x,:coords),d) : Base.size(getfield(x,:coords))
+function Base.size(x::MagneticFieldline, d::Integer = 0)
+  return d > 0 ? Base.size(getfield(x, :coords), d) :
+         Base.size(getfield(x, :coords))
 end
 
 function Base.length(x::MagneticFieldline)
-  return Base.length(getfield(x,:coords))
+  return Base.length(getfield(x, :coords))
 end
 
 function Base.eltype(x::MagneticFieldline)
-  return Base.eltype(getfield(x,:coords))
+  return Base.eltype(getfield(x, :coords))
 end
 
-function Base.iterate(x::MagneticFieldline, state=1)
-  return Base.iterate(getfield(x,:coords),state)
+function Base.iterate(x::MagneticFieldline, state = 1)
+  return Base.iterate(getfield(x, :coords), state)
 end
+=#
 
-function MagneticCoordinateArray(C::Type{MC},α::Real,β::Real,η::AbstractVector{VT}) where VT where MC <: AbstractMagneticCoordinates
-  T = typeof(C(α,β,first(η)))
-  coords = Vector{T}(undef,length(η))
-  @inbounds @simd for i = 1:length(η)
-    coords[i] = C(α,β,η[i])
+function MagneticCoordinateGrid(
+  C::Type{MC},
+  α::Real,
+  β::Real,
+  η::AbstractVector{VT},
+) where {VT} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(α, β, first(η)))
+  coords = StructVector{T}(undef, length(η))
+  @inbounds for i = 1:length(η)
+    coords[i] = C(α, β, η[i])
   end
   return coords
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::Real,β::AbstractVector{VT},η::Real) where VT where MC <: AbstractMagneticCoordinates
-  T = typeof(C(α,first(β),η))
-  coords = Vector{T}(undef,length(β))
-  @inbounds @simd for i = 1:length(β)
-    coords[i] = C(α,β[i],η)
+function MagneticCoordinateGrid(
+  C::Type{MC},
+  α::Real,
+  β::AbstractVector{VT},
+  η::Real,
+) where {VT} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(α, first(β), η))
+  coords = StructVector{T}(undef, length(β))
+  @inbounds for i = 1:length(β)
+    coords[i] = C(α, β[i], η)
   end
   return coords
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::AbstractVector{VT},β::Real,η::Real) where VT where MC <: AbstractMagneticCoordinates
-  T = typeof(C(first(α),β,η))
-  coords = Vector{T}(undef,length(α))
-  @inbounds @simd for i = 1:length(α)
-    coords[i] = C(α[i],β,η)
+function MagneticCoordinateGrid(
+  C::Type{MC},
+  α::AbstractVector{VT},
+  β::Real,
+  η::Real,
+) where {VT} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(first(α), β, η))
+  coords = Vector{T}(undef, length(α))
+  @inbound for i = 1:length(α)
+    coords[i] = C(α[i], β, η)
+  end
+  return StructArray{C{T,T}}(coords)
+end
+
+function MagneticCoordinateGrid(
+  C::Type{MC},
+  α::AbstractArray{VT1,2},
+  β::AbstractArray{VT2,2},
+  η::AbstractArray{VT3,2};
+  keep_order = false,
+  dim_order::Union{Nothing,Vector{Int}} = nothing,
+) where {VT1} where {VT2} where {VT3} where {MC<:AbstractMagneticCoordinates}
+  size(α) == size(β) && size(β) == size(η) ||
+    throw(DimensionMismatch("Dimensions of the input arrays must match"))
+  T = typeof(C(first(α), first(β), first(η)))
+  if !keep_order
+    dimperm = isnothing(dim_order) ? reverse(sortperm([size(β)...])) : dim_order
+  else
+    dimperm = [1, 2]
+  end
+  coords = StructArray{T}(undef, size(α)[dimperm])
+  for j = 1:size(coords, 2)
+    @inbounds for i = 1:size(coords, 1)
+      ij_entry = (i, j)[dimperm]
+      coords[i, j, k] = C(α[ij_entry...], β[ij_entry...], η[ij_entry...])
+    end
   end
   return coords
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::Real,β::AbstractVector{VT1},η::AbstractVector{VT2};
-                             grid=true,fastArg::Int=3) where VT1 where VT2 where MC <: AbstractMagneticCoordinates
-  T = typeof(C(first(α),first(β),first(η)))
+#=
+function MagneticCoordinateGrid(
+  C::Type{MC},
+  α::Real,
+  β::AbstractVector{VT1},
+  η::AbstractVector{VT2};
+  grid::Bool = true,
+  keep_order::Bool = false,
+  dim_order::Union{Nothing,Vector{Int}} = nothing,
+) where {VT1} where {VT2} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(first(α), first(β), first(η)))
   if grid
-    fastvec = fastArg == 3 ? η : β
-    slowvec = fastArg == 3 ? β : η
-    gridSize = (length(fastvec),length(slowvec))
-    coords = Matrix{T}(undef,gridSize)
-    for j = 1:length(slowvec)
-      @inbounds @simd for i = 1:length(fastvec)
-        entry = fastArg == 3 ? (α,slowvec[j],fastvec[i]) : (α,fastvec[i],slowvec[j])
-        coords[i,j] = C(entry...)
+    if !keep_order
+      dimperm =
+        isnothing(dim_order) ? reverse(sortperm([length(β), length(η)])) :
+        dim_order
+    else
+      dimperm = [1, 2]
+    end
+    firstvec = dimperm[1] == 2 ? η : β
+    secondvec = dimperm[2] == 1 ? β : η
+    gridSize = (length(firstvec), length(secondvec))
+    coords = Matrix{T}(undef, gridSize)
+    for j = 1:length(secondvec)
+      @inbounds @simd for i = 1:length(firstvec)
+        entry = (α, (firstvec[i], secondvec[j])[dimperm]...)
+        coords[i, j] = C(entry...)
       end
     end
     return coords
   else
-    length(β) == length(η) || throw(DimensionMismatch("Dimensions of the vectors for the angle-like variables must match for non-gridded use"))
-    coords = Vector{T}(undef,length(β))
+    length(β) == length(η) || throw(
+      DimensionMismatch(
+        "Dimensions of the vectors for the angle-like variables must match for non-gridded use",
+      ),
+    )
+    coords = Vector{T}(undef, length(β))
     @inbounds @simd for i = 1:length(β)
-      coords[i] = C(α,β[i],η[i])
+      coords[i] = C(α, β[i], η[i])
     end
     return coords
   end
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::AbstractVector{VT1},β::Real,η::AbstractVector{VT2};
-                             grid=true,fastArg::Int=3) where VT1 where VT2 where MC <: AbstractMagneticCoordinates
-  T = typeof(C(first(α),first(β),first(η)))
+function MagneticCoordinateArray(
+  C::Type{MC},
+  α::AbstractVector{VT1},
+  β::Real,
+  η::AbstractVector{VT2};
+  grid = true,
+  fastArg::Int = 3,
+) where {VT1} where {VT2} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(first(α), first(β), first(η)))
   if grid
     fastvec = fastArg == 3 ? η : α
     slowvec = fastArg == 3 ? α : η
-    gridSize = (length(fastvec),length(slowvec))
-    coords = Matrix{T}(undef,gridSize)
+    gridSize = (length(fastvec), length(slowvec))
+    coords = Matrix{T}(undef, gridSize)
     for j = 1:length(slowvec)
       @simd for i = 1:length(fastvec)
-        entry = fastArg == 3 ? (slowvec[j],β,fastvec[i]) : (fastvec[i],β,slowvec[j])
-        @inbounds coords[i,j] = C(entry...)
+        entry =
+          fastArg == 3 ? (slowvec[j], β, fastvec[i]) :
+          (fastvec[i], β, slowvec[j])
+        @inbounds coords[i, j] = C(entry...)
       end
     end
     return coords
   else
-    length(α) == length(η) || throw(DimensionMismatch("Dimensions of the vectors for the angle-like variables must match for non-gridded use"))
-    coords = Vector{T}(undef,length(α))
+    length(α) == length(η) || throw(
+      DimensionMismatch(
+        "Dimensions of the vectors for the angle-like variables must match for non-gridded use",
+      ),
+    )
+    coords = Vector{T}(undef, length(α))
     @inbounds @simd for i = 1:length(α)
-      coords[i] = C(α[i],β,η[i])
+      coords[i] = C(α[i], β, η[i])
     end
     return coords
   end
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::AbstractVector{VT1},β::AbstractVector{VT2},η::Real;
-                             grid=true,fastArg::Int=2) where VT1 where VT2 where MC <: AbstractMagneticCoordinates
-  T = typeof(C(first(α),first(β),first(η)))
+function MagneticCoordinateArray(
+  C::Type{MC},
+  α::AbstractVector{VT1},
+  β::AbstractVector{VT2},
+  η::Real;
+  grid = true,
+  fastArg::Int = 2,
+) where {VT1} where {VT2} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(first(α), first(β), first(η)))
   if grid
     fastvec = fastArg == 2 ? β : α
     slowvec = fastArg == 2 ? α : β
-    gridSize = (length(fastvec),length(slowvec))
-    coords = Matrix{T}(undef,gridSize)
+    gridSize = (length(fastvec), length(slowvec))
+    coords = Matrix{T}(undef, gridSize)
     for j = 1:length(slowvec)
       @simd for i = 1:length(fastvec)
-        entry = fastArg == 3 ? (sj,fi,η) : (fi,sj,η)
-        @inbounds coords[i,j] = C(entry...)
+        entry =
+          fastArg == 3 ? (slowvec[j], fastec[i], η) :
+          (fastvec[i], slowvec[j], η)
+        @inbounds coords[i, j] = C(entry...)
       end
     end
     return coords
   else
-    length(α) == length(β) || throw(DimensionMismatch("Dimensions of the vectors for the angle-like variables must match for non-gridded use"))
-    coords = Vector{T}(undef,length(α))
+    length(α) == length(β) || throw(
+      DimensionMismatch(
+        "Dimensions of the vectors for the angle-like variables must match for non-gridded use",
+      ),
+    )
+    coords = Vector{T}(undef, length(α))
     @inbounds @simd for i = 1:length(α)
-      coords[i] = C(α[i],β[i],η)
+      coords[i] = C(α[i], β[i], η)
     end
     return coords
   end
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::AbstractVector{VT1},β::AbstractVector{VT2},
-                             η::AbstractVector{VT3};grid=true,fastArg::Int=3) where VT1 where VT2 where VT3 where MC <: AbstractMagneticCoordinates
-  T = typeof(C(first(α),first(β),first(η)))
+function MagneticCoordinateArray(
+  C::Type{MC},
+  α::AbstractVector{VT1},
+  β::AbstractVector{VT2},
+  η::AbstractVector{VT3};
+  grid = true,
+  keep_order::Bool = false,
+  dim_order::Union{Nothing,Vector{Int}} = nothing,
+) where {VT1} where {VT2} where {VT3} where {MC<:AbstractMagneticCoordinates}
+  T = typeof(C(first(α), first(β), first(η)))
   if grid
-    fastvec = fastArg == 3 ? η : β
-    slowvec = fastArg == 3 ? β : η
-    gridSize = (length(fastvec),length(slowvec),length(α))
-    coords = Array{T}(undef,gridSize)
-    for k = 1:length(α)
-      for j = 1:length(slowvec)
-        @simd for i = 1:length(fastvec)
-          entry = fastArg == 3 ? (α[k],slowvec[j],fastvec[i]) : (α[k],fastvec[i],slowvec[j])
-          @inbounds coords[i,j,k] = C(entry...)
+    if !keep_order
+      dimperm =
+        isnothing(dim_order) ?
+        reverse(sortperm([length(α), length(β), length(η)])) : dim_order
+    else
+      dimperm = [1, 2, 3]
+    end
+    firstvec = dimperm[1] == 3 ? η : dimperm[1] == 2 ? β : α
+    secondvec = dimperm[2] == 2 ? β : dimperm[2] == 3 ? η : α
+    thirdvec = dimperm[3] == 1 ? α : dimperm[3] == 2 ? β : η
+    gridSize = (length(firstvec), length(secondvec), length(thirdvec))
+    coords = Array{T}(undef, gridSize)
+    entry = Vector{eltype(promote(first(α), first(β), first(η)))}(undef, 3)
+    for k = 1:length(thirdvec)
+      for j = 1:length(secondvec)
+        @inbounds @simd for i = 1:length(firstvec)
+          entry[dimperm] .= (firstvec[i], secondvec[j], thirdvec[k])
+          coords[i, j, k] = C(entry...)
         end
       end
     end
     return coords
   else
-    length(β) == length(η) || throw(DimensionMismatch("Dimensions of the vectors for the angle-like variables must match for non-gridded use"))
-    length(α) == length(β) || throw(DimensionMismatch("Dimensions for flux (radial) variable must be the same as angle-like variables"))
-    coords = Vector{T}(undef,length(α))
+    length(β) == length(η) || throw(
+      DimensionMismatch(
+        "Dimensions of the vectors for the angle-like variables must match for non-gridded use",
+      ),
+    )
+    length(α) == length(β) || throw(
+      DimensionMismatch(
+        "Dimensions for flux (radial) variable must be the same as angle-like variables",
+      ),
+    )
+    coords = Vector{T}(undef, length(α))
     for i = 1:length(α)
-      coords[i] = C(α[i],β[i],η[i])
+      coords[i] = C(α[i], β[i], η[i])
     end
     return coords
   end
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::Real,β::AbstractArray{VT1,2},η::AbstractArray{VT2,2}) where VT1 where VT2 where MC <: AbstractMagneticCoordinates
-  size(β) == size(η) || throw(DimensionMismatch("Dimensions of the angle-like arguments must match for 2D input arrays"))
-  T = typeof(C(α,first(β),first(η)))
-  coords = Matrix{T}(undef,size(β))
-  coordAxes = axes(β)
-  @inbounds @simd for i in CartesianIndices(axes(β))
-    coords[i] = C(α,β[i],η[i])
+function MagneticCoordinateArray(
+  C::Type{MC},
+  α::Real,
+  β::AbstractArray{VT1,2},
+  η::AbstractArray{VT2,2},
+  keep_order::Bool = false,
+  dim_order::Union{Nothing,Vector{Int}} = nothing,
+) where {VT1} where {VT2} where {MC<:AbstractMagneticCoordinates}
+  size(β) == size(η) || throw(
+    DimensionMismatch(
+      "Dimensions of the angle-like arguments must match for 2D input arrays",
+    ),
+  )
+  T = typeof(C(α, first(β), first(η)))
+  if !keep_order
+    dimperm = isnothing(dim_order) ? reverse(sortperm([size(β)...])) : dim_order
+  else
+    dimperm = [1, 2]
+  end
+  coords = Matrix{T}(undef, size(β)[dimperm])
+  for j = 1:size(coords, 2)
+    @inbounds @simd for i = 1:size(coords, 1)
+      ij_entry = (i, j)[dimperm]
+      coords[i, j] = C(α, β[ij_entry...], η[ij_entry...])
+    end
   end
   return coords
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::AbstractVector{VT1},β::AbstractArray{VT2,2},η::AbstractArray{VT3,2}) where VT1 where VT2 where VT3 where MC <: AbstractMagneticCoordinates
-  size(β) == size(η) || throw(DimensionMismatch("Dimensions of the angle-like arguments must match for 2D input arrays"))
-  T = typeof(C(α,first(β),first(η)))
-  dimperm = reverse(sortperm([size(β)...]))
-  coords = Array{T}(undef,(size(β)[dimperm],length(α)))
-  for k = 1:size(coords,3)
-    for j = 1:size(coords,2)
-      @inbounds @simd for i = 1:size(coords,1)
-        ij_entry = (i,j)[dimperm]
-        coords[i,j,k] = C(α[k],β[ij_entry...],η[ij_entry...])
+function MagneticCoordinateArray(
+  C::Type{MC},
+  α::AbstractVector{VT1},
+  β::AbstractArray{VT2,2},
+  η::AbstractArray{VT3,2};
+  keep_order::Bool = false,
+  dim_order::Union{Nothing,Vector{Int}} = nothing,
+) where {VT1} where {VT2} where {VT3} where {MC<:AbstractMagneticCoordinates}
+  size(β) == size(η) || throw(
+    DimensionMismatch(
+      "Dimensions of the angle-like arguments must match for 2D input arrays",
+    ),
+  )
+  T = typeof(C(first(α), first(β), first(η)))
+  if !keep_order
+    dimperm = isnothing(dim_order) ? reverse(sortperm([size(β)...])) : dim_order
+  else
+    dimperm = [1, 2, 3]
+  end
+  coords = Array{T}(undef, (size(β)[dimperm]..., length(α)))
+  for k = 1:size(coords, 3)
+    for j = 1:size(coords, 2)
+      @inbounds @simd for i = 1:size(coords, 1)
+        ij_entry = (i, j)[dimperm]
+        coords[i, j, k] = C(α[k], β[ij_entry...], η[ij_entry...])
       end
     end
   end
   return coords
 end
 
-function MagneticCoordinateArray(C::Type{MC},α::AbstractArray{VT1,2},β::AbstractArray{VT2,2},η::AbstractArray{VT3,2}) where VT1 where VT2 where VT3 where MC <: AbstractMagneticCoordinates
-  size(α) == size(β) && size(β) == size(η) || throw(DimensionMismatch("Dimensions of the input arrays must match"))
-  T = typeof(C(first(α),first(β),first(η)))
-  dimperm = reverse(sortperm([size(α)...]))
-  coords = Array{T}(undef,size(α)[dimperm])
-  for j = 1:size(coords,2)
-    @inbounds @simd for i = 1:size(coords,1)
-      ij_entry = (i,j)[dimperm]
-      coords[i,j,k] = C(α[ih_entry...],β[ij_entry...],η[ij_entry...])
+function MagneticCoordinateArray(
+  C::Type{MC},
+  α::AbstractArray{VT1,2},
+  β::AbstractArray{VT2,2},
+  η::AbstractArray{VT3,2};
+  keep_order = false,
+  dim_order::Union{Nothing,Vector{Int}} = nothing,
+) where {VT1} where {VT2} where {VT3} where {MC<:AbstractMagneticCoordinates}
+  size(α) == size(β) && size(β) == size(η) ||
+    throw(DimensionMismatch("Dimensions of the input arrays must match"))
+  T = typeof(C(first(α), first(β), first(η)))
+  if !keep_order
+    dimperm = isnothing(dim_order) ? reverse(sortperm([size(β)...])) : dim_order
+  else
+    dimperm = [1, 2]
+  end
+  coords = Array{T}(undef, size(α)[dimperm])
+  for j = 1:size(coords, 2)
+    @inbounds @simd for i = 1:size(coords, 1)
+      ij_entry = (i, j)[dimperm]
+      coords[i, j, k] = C(α[ij_entry...], β[ij_entry...], η[ij_entry...])
     end
   end
   return coords
 end
-#=
+
 function MagneticCoordinateArray(C::Type{MC},α::Union{Real,AbstractVector{Real}},
                              β::AbstractVector{Real},η::AbstractVector{Real};
                              grid=true,fastdim=3) where MC <: AbstractMagneticCoordinates
@@ -334,8 +551,7 @@ function MagneticCoordinateArray(C::Type{MC},α::Union{Real,AbstractVector{Real}
   end
 
 
-=#
-#=
+
 function buildDimsAndIndices(dims::Vararg{Tuple{Vararg{Base.OneTo{Int64}}}},
                              firstDim::Int=3,secondDim::Int=2,
                              firstDim::Union{Missing,Int}=missing)

@@ -5,18 +5,18 @@ abstract type BasisTransformation <: Transformation end
 
 #Define the singleton types for the coordinate transformations.  All transformations are
 #subtypes of the abstract supertype Transformation provided by CoordinateTransformations.jl.
-struct FluxFromPest <: Transformation; end
-struct PestFromFlux <: Transformation; end
-struct CylindricalFromFlux <: Transformation; end
-struct CylindricalFromPest <: Transformation; end
-struct CartesianFromFlux <: Transformation; end
-struct CartesianFromPest <: Transformation; end
-struct ContravariantFromCovariant <: BasisTransformation; end
-struct CovariantFromContravariant <: BasisTransformation; end
+struct FluxFromPest <: Transformation end
+struct PestFromFlux <: Transformation end
+struct CylindricalFromFlux <: Transformation end
+struct CylindricalFromPest <: Transformation end
+struct CartesianFromFlux <: Transformation end
+struct CartesianFromPest <: Transformation end
+struct ContravariantFromCovariant <: BasisTransformation end
+struct CovariantFromContravariant <: BasisTransformation end
 
 
 """
-    abs(e::BasisVectors{T}[,component=0)
+    abs(e::BasisVectors{T},component=0)
 
 Compute the L2 norm of the basis vector `e`.  If `component` > 0 and <= 3, the L2 norm of the component is returned.
 
@@ -34,9 +34,9 @@ julia> abs(e,1)
 
 ```
 """
-function abs(e::BasisVectors{T},component::Int=0) where T
+function abs(e::BasisVectors{T}, component::Int = 0) where {T}
   if component > 0 && component <= 3
-    return norm(e[:,component])
+    return norm(e[:, component])
   else
     return norm(e)
   end
@@ -49,8 +49,9 @@ end
 Compute the Jacobian of the covariant/contravariatn basis vectors `e` given by
 ``J = e₁ ⋅ e₂ × e₃`` (covariant) or ``J = 1/(e¹ ⋅ e² × e³)`` (contravariant).
 """
-function jacobian(t::BasisType,e::BasisVectors{T}) where T
-  return typeof(t) <: Covariant ? dot(e[:,1],cross(e[:,2],e[:,3])) : 1.0/dot(e[:,1],cross(e[:,2],e[:,3]))
+function jacobian(t::BasisType, e::BasisVectors{T}) where {T}
+  return typeof(t) <: Covariant ? dot(e[:, 1], cross(e[:, 2], e[:, 3])) :
+         1.0 / dot(e[:, 1], cross(e[:, 2], e[:, 3]))
 end
 
 """
@@ -59,11 +60,16 @@ end
 Transform the covariant/contravariant basis given by `e` to a
 contravariant/covariant basis using the dual relations determined by `t` and the provided jacobian `J`.
 """
-function transform_basis(t::BasisTransformation,e::BasisVectors{T},J::T) where T
-  e_1 = cross(e[:,2],e[:,3])
-  e_2 = cross(e[:,3],e[:,1])
-  e_3 = cross(e[:,1],e[:,2])
-  return typeof(t) <: CovariantFromContravariant ? hcat(e_1*J,e_2*J,e_3*J) : hcat(e_1/J,e_2/J,e_3/J)
+function transform_basis(
+  t::BasisTransformation,
+  e::BasisVectors{T},
+  J::T,
+) where {T}
+  e_1 = cross(e[:, 2], e[:, 3])
+  e_2 = cross(e[:, 3], e[:, 1])
+  e_3 = cross(e[:, 1], e[:, 2])
+  return typeof(t) <: CovariantFromContravariant ?
+         hcat(e_1 * J, e_2 * J, e_3 * J) : hcat(e_1 / J, e_2 / J, e_3 / J)
 end
 
 """
@@ -75,25 +81,35 @@ from the basis vectors; for `ContravariantFromCovariant()` the Jacobian is given
 by ``J = e₁ ⋅ e₂ × e₃`` and for `CovariantFromContravariant()` the Jacobian is
 given by ``J = 1.0/(e¹ ⋅ e² × e³)``.
 """
-function transform_basis(t::BasisTransformation,e::BasisVectors{T}) where T
-  J = typeof(t) <: ContravariantFromCovariant ? jacobian(Covariant(),e) : jacobian(Contravariant(),e)
-  return transform_basis(t,e,J)
+function transform_basis(t::BasisTransformation, e::BasisVectors{T}) where {T}
+  J =
+    typeof(t) <: ContravariantFromCovariant ? jacobian(Covariant(), e) :
+    jacobian(Contravariant(), e)
+  return transform_basis(t, e, J)
 end
 
-function transform_basis(t::Transformation,e::AbstractArray{BasisVectors{T}},J::AbstractArray{T}) where T
-  size(e) == size(J) || throw(DimensionMismatch("Mismatch between basis vectors and Jacobian"))
+function transform_basis(
+  t::Transformation,
+  e::AbstractArray{BasisVectors{T}},
+  J::AbstractArray{T},
+) where {T}
+  size(e) == size(J) ||
+    throw(DimensionMismatch("Mismatch between basis vectors and Jacobian"))
   res = similar(e)
   @inbounds @simd for i = 1:length(e)
-    res[i] = transform_basis(t,e[i],J[i])
+    res[i] = transform_basis(t, e[i], J[i])
   end
   return res
 end
 
 
-function transform_basis(t::Transformation,e::AbstractArray{BasisVectors{T}}) where T
+function transform_basis(
+  t::Transformation,
+  e::AbstractArray{BasisVectors{T}},
+) where {T}
   res = similar(e)
   @inbounds @simd for i = 1:length(e)
-    res[i] = transform_basis(t,e[i])
+    res[i] = transform_basis(t, e[i])
   end
   return res
 end
@@ -103,17 +119,34 @@ end
 
 Perform a change of basis for magnetic coordinates denoted by the transformation `t`, using the provided coordinate charts and basis vectors.
 """
-function transform_basis(t::Transformation,x::AbstractArray{CT},e::AbstractArray{BasisVectors{T}},eq::AbstractMagneticEquilibrium) where CT <: AbstractMagneticCoordinates where T
-  ndims(x) == ndims(e) && size(x) == size(e) || throw(DimensionMismatch("Incompatible coordinate/basis vector arrays!"))
+function transform_basis(
+  t::Transformation,
+  x::AbstractArray{CT},
+  e::AbstractArray{BasisVectors{T}},
+  eq::AbstractMagneticEquilibrium,
+) where {CT<:AbstractMagneticCoordinates} where {T}
+  ndims(x) == ndims(e) && size(x) == size(e) ||
+    throw(DimensionMismatch("Incompatible coordinate/basis vector arrays!"))
   res = similar(e)
-  @inbounds @simd for i = 1:length(x)
-    res[i] = transform_basis(t,x[i],e[i],eq)
+  Threads.@threads for i ∈ eachindex(x)
+    res[i] = transform_basis(t, x[i], e[i], eq)
   end
   return res
 end
 
-function basis_vectors(B::BasisType,T::Transformation,c::CT,eq::ET) where CT <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
-  throw(ArgumentError("Basis vector construction for $(B) basis with mapping $(T) over $(typeof(c)) does not exist"))
+function basis_vectors(
+  B::BasisType,
+  T::Transformation,
+  c::CT,
+  eq::ET,
+) where {
+  CT<:AbstractMagneticCoordinates,
+} where {ET<:AbstractMagneticEquilibrium}
+  throw(
+    ArgumentError(
+      "Basis vector construction for $(B) basis with mapping $(T) over $(typeof(c)) does not exist",
+    ),
+  )
 end
 
 """
@@ -134,19 +167,30 @@ julia> e_v = basis_vectors(Covariant(),CartesianFromVmec(),v,vmec_s)
  ⋮
 ```
 """
-function basis_vectors(B::BasisType,T::Transformation,c::AbstractArray{CT},eq::ET) where CT <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
-  res = Array{BasisVectors{typeof(getfield(first(c),1))},ndims(x)}(undef,size(x))
-  @inbounds @simd for i = 1:length(res)
-    res[i] = basis_vectors(B,T,c[i],eq)
+function basis_vectors(
+  B::BasisType,
+  T::Transformation,
+  c::AbstractArray{CT},
+  eq::ET,
+) where {
+  CT<:AbstractMagneticCoordinates,
+} where {ET<:AbstractMagneticEquilibrium}
+  res =
+    Array{BasisVectors{typeof(getfield(first(c), 1))},ndims(x)}(undef, size(x))
+  Threads.@threads for i ∈ eachindex(c)
+    res[i] = basis_vectors(B, T, c[i], eq)
   end
   return res
 end
 
 # `t` needs to be a singleton type
-function (t::Transformation)(x::AbstractArray{T},eq::ET) where T <: AbstractMagneticCoordinates where ET <: AbstractMagneticEquilibrium
-  res = Array{typeof(t(first(x),eq)),ndims(x)}(undef,size(x))
-  @inbounds @simd for i = 1:length(x)
-    res[i] = t(x[i],eq)
+function (t::Transformation)(
+  x::AbstractArray{T},
+  eq::ET,
+) where {T<:AbstractMagneticCoordinates} where {ET<:AbstractMagneticEquilibrium}
+  res = Array{typeof(t(first(x), eq)),ndims(x)}(undef, size(x))
+  Threads.@threads for i ∈ eachindex(x)
+    res[i] = t(x[i], eq)
   end
   return res
 end
