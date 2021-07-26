@@ -263,7 +263,6 @@ function MagneticCoordinateGrid(
   return coords
 end
 
-#=
 function MagneticCoordinateGrid(
   C::Type{MC},
   α::Real,
@@ -307,6 +306,7 @@ function MagneticCoordinateGrid(
   end
 end
 
+#=
 function MagneticCoordinateArray(
   C::Type{MC},
   α::AbstractVector{VT1},
