@@ -231,7 +231,7 @@ function MagneticCoordinateGrid(
 ) where {VT} where {MC<:AbstractMagneticCoordinates}
   T = typeof(C(first(α), β, η))
   coords = Vector{T}(undef, length(α))
-  @inbound for i = 1:length(α)
+  @inbounds for i = 1:length(α)
     coords[i] = C(α[i], β, η)
   end
   return StructArray{C{T,T}}(coords)
