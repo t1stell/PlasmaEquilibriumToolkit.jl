@@ -343,6 +343,7 @@ function MagneticCoordinateArray(
     return coords
   end
 end
+=#
 
 function MagneticCoordinateArray(
   C::Type{MC},
@@ -381,6 +382,7 @@ function MagneticCoordinateArray(
   end
 end
 
+#=
 function MagneticCoordinateArray(
   C::Type{MC},
   α::AbstractVector{VT1},
