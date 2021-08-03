@@ -96,7 +96,7 @@ function transform_basis(
   size(e) == size(J) ||
     throw(DimensionMismatch("Mismatch between basis vectors and Jacobian"))
   res = similar(e)
-  @inbounds @simd for i = 1:length(e)
+  @inbounds for i = 1:length(e)
     res[i] = transform_basis(t, e[i], J[i])
   end
   return res
@@ -108,7 +108,7 @@ function transform_basis(
   e::AbstractArray{BasisVectors{T}},
 ) where {T}
   res = similar(e)
-  @inbounds @simd for i = 1:length(e)
+  @inbounds for i = 1:length(e)
     res[i] = transform_basis(t, e[i])
   end
   return res
