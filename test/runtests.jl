@@ -18,32 +18,32 @@ import Combinatorics
     end
   end
 
-  #=
-    # Test the MagneticCoordinateArray functionality
-    @testset "Vector" begin
-      c = ClebschCoordinates
-      coords = (:α, :β, :η)
-      π_float = convert(Float64, π)
-      for i = 1:3
-        for j = 1:3
-          if i == j
-            eval(Expr(:(=), coords[j], 0:2π/8:2π))
-          else
-            eval(Expr(:(=), coords[j], 0.0))
-          end
+
+  # Test the MagneticCoordinateGrid functionality
+  @testset "Vector" begin
+    c = ClebschCoordinates
+    coords = (:α, :β, :η)
+    π_float = convert(Float64, π)
+    for i = 1:3
+      for j = 1:3
+        if i == j
+          eval(Expr(:(=), coords[j], 0:2π/8:2π))
+        else
+          eval(Expr(:(=), coords[j], 0.0))
         end
-        c_array = MagneticCoordinateArray(c, eval.(coords)...)
-
-        @test typeof(c_array) == Vector{c{Float64,Float64}}
-        @test length(c_array) == 9
-        @test c_array[5] == c{Float64,Float64}(
-          i == 1 ? π_float : 0.0,
-          i == 2 ? π_float : 0.0,
-          i == 3 ? π_float : 0.0,
-        )
       end
-    end
+      c_array = MagneticCoordinateGrid(c, eval.(coords)...)
 
+      @test typeof(c_array) == StructVector{c{Float64,Float64}}
+      @test length(c_array) == 9
+      @test c_array[5] == c{Float64,Float64}(
+        i == 1 ? π_float : 0.0,
+        i == 2 ? π_float : 0.0,
+        i == 3 ? π_float : 0.0,
+      )
+    end
+  end
+    #=
     @testset "Vector_2args" begin
       c = ClebschCoordinates
       coords = [:α, :β, :η]

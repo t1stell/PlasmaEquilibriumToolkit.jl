@@ -230,11 +230,11 @@ function MagneticCoordinateGrid(
   η::Real,
 ) where {VT} where {MC<:AbstractMagneticCoordinates}
   T = typeof(C(first(α), β, η))
-  coords = Vector{T}(undef, length(α))
+  coords = StructVector{T}(undef, length(α))
   @inbounds for i = 1:length(α)
     coords[i] = C(α[i], β, η)
   end
-  return StructArray{C{T,T}}(coords)
+  return coords
 end
 
 function MagneticCoordinateGrid(
@@ -243,21 +243,21 @@ function MagneticCoordinateGrid(
   β::AbstractArray{VT2,2},
   η::AbstractArray{VT3,2};
   keep_order = false,
-  dim_order::Union{Nothing,Vector{Int}} = nothing,
+  dim_order::Union{Nothing,Vector{Int},Tuple{Int,Int}} = nothing,
 ) where {VT1} where {VT2} where {VT3} where {MC<:AbstractMagneticCoordinates}
   size(α) == size(β) && size(β) == size(η) ||
     throw(DimensionMismatch("Dimensions of the input arrays must match"))
   T = typeof(C(first(α), first(β), first(η)))
   if !keep_order
-    dimperm = isnothing(dim_order) ? reverse(sortperm([size(β)...])) : dim_order
+    dimperm = isnothing(dim_order) ? SVector{2,Int}(reverse(sortperm([size(β)...]))) : SVector{2,Int}(dim_order)
   else
-    dimperm = [1, 2]
+    dimperm = SVector(1, 2)
   end
   coords = StructArray{T}(undef, size(α)[dimperm])
   for j = 1:size(coords, 2)
     @inbounds for i = 1:size(coords, 1)
       ij_entry = (i, j)[dimperm]
-      coords[i, j, k] = C(α[ij_entry...], β[ij_entry...], η[ij_entry...])
+      coords[i, j] = C(α[ij_entry...], β[ij_entry...], η[ij_entry...])
     end
   end
   return coords
@@ -284,7 +284,7 @@ function MagneticCoordinateGrid(
     firstvec = dimperm[1] == 2 ? η : β
     secondvec = dimperm[2] == 1 ? β : η
     gridSize = (length(firstvec), length(secondvec))
-    coords = Matrix{T}(undef, gridSize)
+    coords = StructArray{T}(undef, gridSize)
     for j = 1:length(secondvec)
       @inbounds for i = 1:length(firstvec)
         entry = (α, (firstvec[i], secondvec[j])[dimperm]...)
@@ -298,7 +298,7 @@ function MagneticCoordinateGrid(
         "Dimensions of the vectors for the angle-like variables must match for non-gridded use",
       ),
     )
-    coords = Vector{T}(undef, length(β))
+    coords = StructVector{T}(undef, length(β))
     @inbounds for i = 1:length(β)
       coords[i] = C(α, β[i], η[i])
     end

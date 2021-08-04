@@ -51,6 +51,7 @@ end
 
 function gradB(
   x::MC,
+  e::BasisVectors,
   eq::ET,
 ) where {
   MC<:AbstractMagneticCoordinates,
@@ -159,7 +160,7 @@ function curvatureComponents(
     DimensionMismatch("Basis vectors and ∇B arays must have the same size"),
   )
   res = Array{NTuple{2,T}}(undef, size(gradB))
-  @inbounds @simd for i = 1:length(res)
+  @inbounds for i = 1:length(res)
     res[i] = curvatureComponents(contravariantBasis[i], ∇B[i])
   end
   return res
@@ -187,7 +188,7 @@ end
 
 function metric(e::AbstractArray{BasisVectors{T}}) where {T}
   res = Array{SVector{6,T}}(undef, size(e))
-  @inbounds @simd for i = 1:length(res)
+  @inbounds for i = 1:length(res)
     res[i] = metric(e[i])
   end
   return res
@@ -199,7 +200,7 @@ function metric(
   v::Integer,
 ) where {T}
   res = Array{T}(undef, size(e))
-  @inbounds @simd for i = 1:length(res)
+  @inbounds for i = 1:length(res)
     res[i] = metric(e[i], u, v)
   end
   return res
