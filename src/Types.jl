@@ -281,14 +281,20 @@ function MagneticCoordinateGrid(
     else
       dimperm = [1, 2]
     end
-    firstvec = dimperm[1] == 2 ? η : β
-    secondvec = dimperm[2] == 1 ? β : η
-    gridSize = (length(firstvec), length(secondvec))
+    β_length = length(β)
+    η_length = length(η)
+    #β_index(i) = first(dimperm) == 2 ? div(i,η_length) + 1 : (i-1) % β_length + 1
+    #η_index(i) = first(dimperm) == 1 ? div(i,β_length) + 1 : (i-1) % η_length + 1
+    gridSize = first(dimperm) == 2 ? (η_length,β_length) : (β_length,η_length)
+   
     coords = StructArray{T}(undef, gridSize)
-    for j = 1:length(secondvec)
-      @inbounds for i = 1:length(firstvec)
-        entry = (α, (firstvec[i], secondvec[j])[dimperm]...)
-        coords[i, j] = C(entry...)
+    if first(dimperm) == 2
+      Threads.@threads for i = 1:β_length*η_length
+        @inbounds coords[i] = C(α,β[div(i-1,η_length)+1],η[(i-1) % η_length+1])
+      end
+    else
+      Threads.@threads for i = 1:β_length*η_length
+        @inbounds coords[i] = C(α,β[(i-1) % β_length+1],η[div(i-1,β_length)+1])
       end
     end
     return coords
