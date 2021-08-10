@@ -23,12 +23,86 @@ function Bfield(e::BasisVectors)
   return Bfield(Contravariant(), e)
 end
 
-function Bnorm(
-  x::MC,
-  eq::ET,
-) where {
-  MC<:AbstractMagneticCoordinates,
-} where {ET<:AbstractMagneticEquilibrium}
+function Bnorm(::Contravariant,
+               e::AbstractArray{BasisVectors{T}};
+              ) where {T}
+  res = Array{T}(undef,size(e))
+  Bnorm!(res,Contravariant(),e)
+  return res
+end
+
+function Bnorm!(B::AbstractArray{T},
+                ::Contravariant,
+                e::AbstractArray{BasisVectors{T}};
+               ) where {T}
+  size(B) == size(e) || throw(DimensionMismatch("Incompatible sizes in Bnorm!"))
+  @batch minbatch=10 for i in eachindex(B,e)
+    B[i] = Bnorm(Contravariant(),e[i])
+  end
+end
+
+function Bnorm(::Covariant,
+               e::AbstractArray{BasisVectors{T}},
+               ι::Real;
+              ) where {T}
+  res = Array{T}(undef,size(e))
+  Bnorm!(res,Covariant(),e,ι)
+  return res
+end
+
+function Bnorm!(B::AbstractArray{T},
+                ::Contravariant,
+                e::AbstractArray{BasisVectors{T}},
+                ι::Real;
+               ) where {T}
+  size(B) == size(e) || throw(DimensionMismatch("Incompatible sizes in Bnorm!"))
+  @batch minbatch=16 for i in eachindex(B,e)
+    B[i] = Bnorm(Covariant(),e[i],ι)
+  end
+end
+
+function Bfield(::Contravariant,
+               e::AbstractArray{BasisVectors{T}};
+              ) where {T}
+  res = Array{CoordinateVector{T}}(undef,size(e))
+  Bfield!(res,Contravariant(),e)
+  return res
+end
+
+function Bfield!(B::AbstractArray{CoordinateVector{T}},
+                ::Contravariant,
+                e::AbstractArray{BasisVectors{T}};
+               ) where {T}
+  size(B) == size(e) || throw(DimensionMismatch("Incompatible sizes in Bfield!"))
+  @batch minbatch=16 for i in eachindex(B,e)
+    B[i] = Bfield(Contravariant(),e[i])
+  end
+end
+
+function Bfield(::Covariant,
+               e::AbstractArray{BasisVectors{T}},
+               ι::Real;
+              ) where {T}
+  res = Array{CoordinateVector{T}}(undef,size(e))
+  Bfield!(res,Covariant(),e,ι)
+  return res
+end
+
+function Bfield!(B::AbstractArray{CoordinateVector{T}},
+                ::Contravariant,
+                e::AbstractArray{BasisVectors{T}},
+                ι::Real;
+               ) where {T}
+  size(B) == size(e) || throw(DimensionMismatch("Incompatible sizes in Bfield!"))
+  @batch minbatch=16 for i in eachindex(B,e)
+    B[i] = Bfield(Covariant(),e[i],ι)
+  end
+end
+
+function Bnorm(x::MC,
+               eq::ET;
+              ) where {MC<:AbstractMagneticCoordinates,
+                       ET<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "Bnorm with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -36,12 +110,33 @@ function Bnorm(
   )
 end
 
-function Bfield(
-  x::MC,
-  eq::EC,
-) where {
-  MC<:AbstractMagneticCoordinates,
-} where {EC<:AbstractMagneticEquilibrium}
+function Bnorm(x::AbstractArray{MC},
+               eq::ET;
+              ) where {MC <: AbstractMagneticCoordinates,
+                       ET <: AbstractMagneticEquilibrium,
+                      }
+  T = typeof(getfield(first(x),1))
+  res = Array{T}(undef,size(x))
+  Bnorm!(res,x,eq)
+  return res
+end
+
+function Bnorm!(B::AbstractArray{T},
+                x::AbstractArray{MC},
+                eq::ET;
+               ) where {MC <: AbstractMagneticCoordinates,
+                        ET <: AbstractMagneticEquilibrium,
+                        T}
+  size(B) == size(x) || throw(DimensionMismatch("Incompatible dimensions in Bnorm!"))
+  @batch minbatch=16 for i in eachindex(x,B)
+    B[i] = Bnorm(x[i],eq)
+  end
+end
+
+function Bfield(x::MC,
+                eq::ET,
+               ) where {MC<:AbstractMagneticCoordinates,
+                        ET<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "Bfield with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -49,13 +144,34 @@ function Bfield(
   )
 end
 
-function gradB(
-  x::MC,
-  e::BasisVectors,
-  eq::ET,
-) where {
-  MC<:AbstractMagneticCoordinates,
-} where {ET<:AbstractMagneticEquilibrium}
+function Bfield(x::AbstractArray{MC},
+                eq::ET;
+               ) where {MC <: AbstractMagneticCoordinates,
+                        ET <: AbstractMagneticEquilibrium,
+                       }
+  T = typeof(getfield(first(x),1))
+  res = Array{CoordinateVector{T}}(undef,size(x))
+  Bfield!(res,x,eq)
+  return res
+end
+
+function Bfield!(Bvec::AbstractArray{CoordinateVector},
+                 x::AbstractArray{MC},
+                 eq::ET;
+                ) where {MC <: AbstractMagneticCoordinates,
+                         ET <: AbstractMagneticEquilibrium,
+                         T}
+  size(Bvec) == size(x) || throw(DimensionMismatch("Incompatible dimensions in Bfield!"))
+  @batch minbatch=16 for i in eachindex(Bvec,x) 
+    Bvec[i] = Bfield(x[i],eq) 
+  end
+end
+
+function gradB(x::MC,
+               e::BasisVectors,
+               eq::ET,
+              ) where {MC<:AbstractMagneticCoordinates,
+                       ET<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "gradB with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -63,12 +179,10 @@ function gradB(
   )
 end
 
-function jacobian(
-  x::MC,
-  eq::ET,
-) where {
-  MC<:AbstractMagneticCoordinates,
-} where {ET<:AbstractMagneticEquilibrium}
+function jacobian(x::MC,
+                  eq::ET,
+                 ) where { MC<:AbstractMagneticCoordinates,
+                          ET<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "jacobian with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -95,6 +209,17 @@ end
 #b = bx ∇x + by ∇y + bz ∇z
 #b × ∇B = dbdy*bx ∇x × ∇y + dbdz*bx ∇x × ∇z + dbdx*by ∇y × ∇x + dbdz*by ∇y × ∇z + dbdx*bz ∇z × ∇x + dbdy*bz ∇z × ∇y
 #b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
+
+function curvatureProjection(e::AbstractArray{BasisVectors{T}},
+                             gradB::AbstractArray{CoordinateVector{T}};
+                            ) where {T}
+  size(e) == size(gradB) || throw(DimensionMismatch("Incompatible dimensions in curvatureProjection"))
+  res = Array{Tuple{T,T}}(undef,size(e))
+  @batch minbatch=16 for i in eachindex(e,gradB,res)
+    res[i] = curvatureProjection(e[i],gradB[i])
+  end
+  return res
+end
 
 """
     normalCurvature(B::CoordinateVector,gradB::CoordinateVector,gradX::CoordinateVector,gradY::CoordinateVector)
@@ -138,10 +263,9 @@ Computes the normal and geodesic curvature vectors for a stright field line coor
 
 See also: [`normalCurvature`](@ref), [`geodesicCurvature`](@ref)
 """
-function curvatureComponents(
-  contravariantBasis::BasisVectors,
-  gradB::CoordinateVector,
-)
+function curvatureComponents(contravariantBasis::BasisVectors{T},
+                             gradB::CoordinateVector{T};
+                            ) where {T}
   B = cross(contravariantBasis[:, 1], contravariantBasis[:, 2])
   return normalCurvature(
     B,
@@ -152,15 +276,14 @@ function curvatureComponents(
   geodesicCurvature(B, gradB, contravariantBasis[:, 1])
 end
 
-function curvatureComponents(
-  contravariantBasis::AbstractArray{BasisVectors{T}},
-  ∇B::AbstractArray{CoordinateVector{T}},
-) where {T}
+function curvatureComponents(contravariantBasis::AbstractArray{BasisVectors{T}},
+                             ∇B::AbstractArray{CoordinateVector{T}};
+                            ) where {T}
   size(contravariantBasis) == size(∇B) || throw(
     DimensionMismatch("Basis vectors and ∇B arays must have the same size"),
   )
-  res = Array{NTuple{2,T}}(undef, size(gradB))
-  @inbounds for i = 1:length(res)
+  res = Array{NTuple{2,T}}(undef, size(∇B))
+  @batch minbatch=16 for i in eachindex(contravariantBasis, ∇B, res)
     res[i] = curvatureComponents(contravariantBasis[i], ∇B[i])
   end
   return res
@@ -188,7 +311,7 @@ end
 
 function metric(e::AbstractArray{BasisVectors{T}}) where {T}
   res = Array{SVector{6,T}}(undef, size(e))
-  @inbounds for i = 1:length(res)
+  @batch minbatch=16 for i in eachindex(e,res)
     res[i] = metric(e[i])
   end
   return res
@@ -200,7 +323,7 @@ function metric(
   v::Integer,
 ) where {T}
   res = Array{T}(undef, size(e))
-  @inbounds for i = 1:length(res)
+  @batch minbatch=16 for i in eachindex(res,e)
     res[i] = metric(e[i], u, v)
   end
   return res

@@ -96,7 +96,7 @@ function transform_basis(
   size(e) == size(J) ||
     throw(DimensionMismatch("Mismatch between basis vectors and Jacobian"))
   res = similar(e)
-  @inbounds for i = 1:length(e)
+  @batch minbatch=16 for i in eachindex(e,J,res)
     res[i] = transform_basis(t, e[i], J[i])
   end
   return res
@@ -108,7 +108,7 @@ function transform_basis(
   e::AbstractArray{BasisVectors{T}},
 ) where {T}
   res = similar(e)
-  @inbounds for i = 1:length(e)
+  @batch minbatch=16 for i in eachindex(e,res)
     res[i] = transform_basis(t, e[i])
   end
   return res
@@ -128,7 +128,7 @@ function transform_basis(
   ndims(x) == ndims(e) && size(x) == size(e) ||
     throw(DimensionMismatch("Incompatible coordinate/basis vector arrays!"))
   res = similar(e)
-  Threads.@threads for i ∈ eachindex(x)
+  @batch minbatch=16 for i ∈ eachindex(x)
     res[i] = transform_basis(t, x[i], e[i], eq)
   end
   return res
@@ -177,7 +177,7 @@ function basis_vectors(
 } where {ET<:AbstractMagneticEquilibrium}
   res =
     Array{BasisVectors{typeof(getfield(first(c), 1))},ndims(c)}(undef, size(c))
-  Threads.@threads for i ∈ eachindex(c)
+  @batch minbatch=16 for i ∈ eachindex(c)
     res[i] = basis_vectors(B, T, c[i], eq)
   end
   return res
@@ -189,7 +189,7 @@ function (t::Transformation)(
   eq::ET,
 ) where {T<:AbstractMagneticCoordinates} where {ET<:AbstractMagneticEquilibrium}
   res = Array{typeof(t(first(x), eq)),ndims(x)}(undef, size(x))
-  Threads.@threads for i ∈ eachindex(x)
+  @batch minbatch=16 for i ∈ eachindex(x)
     res[i] = t(x[i], eq)
   end
   return res
