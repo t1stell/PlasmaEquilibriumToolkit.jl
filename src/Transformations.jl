@@ -176,7 +176,7 @@ function basis_vectors(
   CT<:AbstractMagneticCoordinates,
 } where {ET<:AbstractMagneticEquilibrium}
   res =
-    Array{BasisVectors{typeof(getfield(first(c), 1))},ndims(x)}(undef, size(x))
+    Array{BasisVectors{typeof(getfield(first(c), 1))},ndims(c)}(undef, size(c))
   Threads.@threads for i ∈ eachindex(c)
     res[i] = basis_vectors(B, T, c[i], eq)
   end
