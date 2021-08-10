@@ -4,6 +4,7 @@ using LinearAlgebra
 using StaticArrays
 using StructArrays
 using CoordinateTransformations
+using Polyester
 
 # Export statements
 # Abstract quantities
@@ -26,10 +27,11 @@ export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
 # Basis vector quantities
 export BasisTypes, Covariant, Contravariant
 export CoordinateVector, BasisVectors
+export basis_vectors
 
 # Change of basis quantities
 export CovariantFromContravariant, ContravariantFromCovariant
-export covariant_basis, contravariant_basis, transform_basis, jacobian
+export transform_basis, jacobian
 
 # Derived quantities
 export gradB, curvatureProjection, curvatureComponents
@@ -39,6 +41,7 @@ export gradB, Bnorm, Bfield
 
 include("Types.jl")
 include("MagneticCoordinates.jl")
+include("MagneticCoordinateGrid.jl")
 include("Transformations.jl")
 include("DerivedQuantities.jl")
 
