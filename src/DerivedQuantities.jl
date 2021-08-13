@@ -22,6 +22,14 @@ end
 #b × ∇B = dbdy*bx ∇x × ∇y + dbdz*bx ∇x × ∇z + dbdx*by ∇y × ∇x + dbdz*by ∇y × ∇z + dbdx*bz ∇z × ∇x + dbdy*bz ∇z × ∇y
 #b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
 
+
+# ∇P = dP/dX ∇X for B = ∇X × ∇Y
+function curvatureProjection(e::BasisVectors,gradB::CoordinateVector,gradP::T) where T
+  K1, K2 = curvatureProjection(e,gradB)
+  μ = 4π*1e-7
+  return K1, K2 + μ*norm(cross(e[:,1],e[:,2]))*gradP
+end
+
 """
     normalCurvature(B::CoordinateVector,gradB::CoordinateVector,gradX::CoordinateVector,gradY::CoordinateVector)
 

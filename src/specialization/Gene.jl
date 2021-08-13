@@ -8,6 +8,7 @@ function writeGeneGeometry(filename::String,coords::AbstractVector{PestCoordinat
                            g::AbstractVector{NTuple{6,Float64}},
                            modB::AbstractVector{Float64},jac::AbstractVector{Float64},K1::AbstractVector{Float64},
                            K2::AbstractVector{Float64},dBdθ::AbstractVector{Float64}) where ME <: MagneticEquilibrium
+  Ba = abs(eq.phi[end]/(π*eq.Aminor_p^2))
   geneFile = filename*".dat"
   io = open(geneFile,"w")
   # Write the parameters namelist
@@ -17,16 +18,17 @@ function writeGeneGeometry(filename::String,coords::AbstractVector{PestCoordinat
   q0 = 1.0/eq.iota[1]
   shat = -2*s0/q0*eq.iota[2]*q0^2
   lengthString = "!major, minor radius[m] = "*string(eq.Rmajor_p)*" "*string(eq.Aminor_p)*"\n"
-  Bstring = "!Bref = "*string(eq.phi[end]/(π*eq.Aminor_p^2))*"\n"
+  Bstring = "!Bref = "*string(Ba)*"\n"
   gridString = "gridpoints = "*string(length(coords))*"\n"
   npolString = "n_pol = "*string(abs(round(Int,getfield(last(coords),3)*eq.iota[1]/π)))*"\n"
+  dpdx_string = "my_dpdx = "*string(-4.0*sqrt(eq.s)*eq.pres[2]/(Ba^2)*4π*1e-7)*"\n"
 
   write(io,"&parameters\n")
   write(io,coordString)
   write(io,"!s0, alpha0 = "*string(s0)*" "*string(α0)*"\n")
   write(io,lengthString)
   write(io,Bstring)
-  write(io,"my_dpdx = "*string(zero(Float64))*"\n")
+  write(io,dpdx_string)
   write(io,"q0 = "*string(q0)*"\n")
   write(io,"shat = "*string(shat)*"\n")
   write(io,gridString)
