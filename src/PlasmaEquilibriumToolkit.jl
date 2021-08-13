@@ -3,6 +3,7 @@ module PlasmaEquilibriumToolkit
 using LinearAlgebra
 using StaticArrays
 using StructArrays
+using LabelledArrays
 using CoordinateTransformations
 using Polyester
 
