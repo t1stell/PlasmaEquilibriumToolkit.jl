@@ -13,7 +13,7 @@ export AbstractMagneticGeometry, AbstractMagneticCoordinates
 export AbstractMagneticEquilibrium, NullEquilibrium
 export AbstractMagneticSurface, MagneticSurface
 export AbstractMagneticFieldline, MagneticFieldline
-export MagneticCoordinateGrid
+export MagneticCoordinateGrid, MagneticCoordinateCurve
 
 # Magnetic coordinate concretizations
 export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
