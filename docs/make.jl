@@ -1,14 +1,14 @@
-using PlasmaTurbulenceSaturationModel
+using PlasmaEquilibriumToolkit
 using Documenter
 
 makedocs(;
-    modules=[PlasmaTurbulenceSaturationModel],
+    modules=[PlasmaEquilibriumToolkit],
     authors="Benjamin Faber <bfaber@wisc.edu> and contributors",
-    repo="https://gitlab.com/wistell/PlasmaTurbulenceSaturationModel.jl/blob/{commit}{path}#L{line}",
-    sitename="PlasmaTurbulenceSaturationModel.jl",
+    repo="https://gitlab.com/wistell/PlasmaEquilibriumToolkit.jl/blob/{commit}{path}#L{line}",
+    sitename="PlasmaEquilibriumToolkit.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://wistell.gitlab.io/PlasmaTurbulenceSaturationModel.jl",
+        canonical="https://wistell.gitlab.io/PlasmaEquilibriumToolkit.jl",
         assets=String[],
     ),
     pages=[
