@@ -1,6 +1,5 @@
-#using PlasmaEquilibriumToolkit
+using PlasmaEquilibriumToolkit
 using Test
-import Combinatorics
 
 @testset "PlasmaEquilibriumToolkit.jl" begin
   # Ensure the magnetic coordinate types are working
