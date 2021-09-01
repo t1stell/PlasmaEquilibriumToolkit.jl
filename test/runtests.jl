@@ -31,9 +31,8 @@ using Test
           eval(Expr(:(=), coords[j], 0.0))
         end
       end
-      c_array = MagneticCoordinateGrid(c, eval.(coords)...)
+      c_array = MagneticCoordinateCurve(c, eval.(coords)...)
 
-      @test typeof(c_array) == StructVector{c{Float64,Float64}}
       @test length(c_array) == 9
       @test c_array[5] == c{Float64,Float64}(
         i == 1 ? π_float : 0.0,
