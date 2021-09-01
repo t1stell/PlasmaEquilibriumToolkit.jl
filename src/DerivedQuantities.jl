@@ -209,7 +209,7 @@ end
 #b = bx ∇x + by ∇y + bz ∇z
 #b × ∇B = dbdy*bx ∇x × ∇y + dbdz*bx ∇x × ∇z + dbdx*by ∇y × ∇x + dbdz*by ∇y × ∇z + dbdx*bz ∇z × ∇x + dbdy*bz ∇z × ∇y
 #b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
-
+#
 function curvatureProjection(e::AbstractArray{BasisVectors{T}},
                              gradB::AbstractArray{CoordinateVector{T}};
                             ) where {T}
@@ -219,6 +219,12 @@ function curvatureProjection(e::AbstractArray{BasisVectors{T}},
     res[i] = curvatureProjection(e[i],gradB[i])
   end
   return res
+end
+
+# ∇P = dP/dX ∇X for B = ∇X × ∇Y
+function curvatureProjection(e::BasisVectors,gradB::CoordinateVector,gradP::T) where T
+  K1, K2 = curvatureProjection(e,gradB)
+  return K1, K2 + 4π*1e-7*norm(cross(e[:,1],e[:,2]))*gradP
 end
 
 """
