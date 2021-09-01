@@ -1,3 +1,8 @@
+"""
+    MagneticCoordinateGrid(C::AbstractMagneticCoordinates,α::Union{AbstractArray,Real},β::Union{AbstractArray,Real},η::Union{AbstractArray,Real}
+
+Generate a grid of magnetic coordiantes of type `C`, returning a `StructArray{C}` containing the coordinates
+"""
 function MagneticCoordinateGrid(C::Type{CT},
                                  α::AbstractArray{VT1,3},
                                  β::AbstractArray{VT2,3},
