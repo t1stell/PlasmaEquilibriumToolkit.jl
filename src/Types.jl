@@ -59,6 +59,12 @@ struct AbstractMagneticSurface <: AbstractMagneticGeometry
   surfaceLabel::AbstractFloat
 end
 
+struct AbstractMagneticFieldline <: AbstractMagneticGeometry
+  eqType::Type
+  surfaceLabel::Float64
+  fieldlineLabel::Float64
+  toroidalAngle::Float64
+end
 #=
 struct MagneticSurface <: MagneticGeometry
   eq::MagneticEquilibrium
@@ -70,12 +76,6 @@ struct MagneticSurface <: MagneticGeometry
 end
 =#
 #=
-struct AbstractMagneticFieldline <: AbstractMagneticGeometry
-  eqType::Type
-  surfaceLabel::Float64
-  fieldlineLabel::Float64
-  toroidalAngle::Float64
-end
 
 struct MagneticFieldline <: MagneticGeometry
   eq::MagneticEquilibrium
