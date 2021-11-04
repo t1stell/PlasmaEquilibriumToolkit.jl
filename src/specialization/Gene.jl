@@ -4,10 +4,10 @@ export GeneFromPest, GeneFromFlux, geneGeometryCoefficients
 struct GeneFromPest <: Transformation; end
 struct GeneFromFlux <: Transformation; end
 
-function writeGeneGeometry(filename::String,coords::AbstractVector{PestCoordinates},eq::ME,
+function writeGeneGeometry(filename::String,coords,eq::ME,
                            g::AbstractVector{SVector{6,Float64}},
                            modB::AbstractVector{Float64},jac::AbstractVector{Float64},K1::AbstractVector{Float64},
-                           K2::AbstractVector{Float64},dBdθ::AbstractVector{Float64}) where ME <: MagneticEquilibrium
+                           K2::AbstractVector{Float64},dBdθ::AbstractVector{Float64}) where ME <: AbstractMagneticEquilibrium
   Ba = abs(eq.phi[end]/(π*eq.Aminor_p^2))
   geneFile = filename*".dat"
   io = open(geneFile,"w")

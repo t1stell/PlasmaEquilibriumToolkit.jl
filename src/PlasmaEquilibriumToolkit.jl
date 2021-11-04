@@ -47,5 +47,5 @@ include("Transformations.jl")
 include("DerivedQuantities.jl")
 
 # Specialzed coordinate defintions, transformations, routines for different codes
-#include("Specializations.jl")
+include("Specializations.jl")
 end
