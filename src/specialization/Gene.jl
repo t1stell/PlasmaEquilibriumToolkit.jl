@@ -5,7 +5,7 @@ struct GeneFromPest <: Transformation; end
 struct GeneFromFlux <: Transformation; end
 
 function writeGeneGeometry(filename::String,coords::AbstractVector{PestCoordinates},eq::ME,
-                           g::AbstractVector{NTuple{6,Float64}},
+                           g::AbstractVector{SVector{6,Float64}},
                            modB::AbstractVector{Float64},jac::AbstractVector{Float64},K1::AbstractVector{Float64},
                            K2::AbstractVector{Float64},dBdθ::AbstractVector{Float64}) where ME <: MagneticEquilibrium
   Ba = abs(eq.phi[end]/(π*eq.Aminor_p^2))
