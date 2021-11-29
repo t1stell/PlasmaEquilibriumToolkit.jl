@@ -1,4 +1,6 @@
 using PlasmaEquilibriumToolkit
+using Combinatorics
+using StructArrays
 using Test
 
 @testset "PlasmaEquilibriumToolkit.jl" begin
@@ -18,8 +20,8 @@ using Test
   end
 
 
-  # Test the MagneticCoordinateGrid functionality
-  @testset "Vector" begin
+  # Test the MagneticCoordinateCurve functionality
+  @testset "MagneticCoordinateCurve - 1 Vector Argument" begin
     c = ClebschCoordinates
     coords = (:α, :β, :η)
     π_float = convert(Float64, π)
@@ -41,101 +43,41 @@ using Test
       )
     end
   end
-    #=
-    @testset "Vector_2args" begin
-      c = ClebschCoordinates
-      coords = [:α, :β, :η]
-      π_float = convert(Float64, π)
-      coord_perms = Combinatorics.permutations(coords, 2)
+  @testset "MagneticCoordinateCurve - 2 Vector Arguments" begin
+    c = ClebschCoordinates
+    coords = [:α, :β, :η]
+    π_float = convert(Float64, π)
+    coord_perms = Combinatorics.permutations(coords, 2)
 
-      for p in coord_perms
-        leftover = setdiff(coords, p)[]
-        for cp in p
-          eval(Expr(:(=), cp, 0:2π/8:2π))
-        end
-        eval(Expr(:(=), leftover, 0.0))
-        c_array = MagneticCoordinateArray(c, eval.(coords)...)
-
-        @test typeof(c_array) == Array{c{Float64,Float64},2}
-        @test size(c_array) == (9, 9)
-        @test c_array[5, 5] == c{Float64,Float64}(
-          :α in p ? π_float : 0.0,
-          :β in p ? π_float : 0.0,
-          :η in p ? π_float : 0.0,
-        )
+    for p in coord_perms
+      leftover = setdiff(coords, p)[]
+      for cp in p
+        eval(Expr(:(=), cp, 0:2π/8:2π))
       end
+      eval(Expr(:(=), leftover, 0.0))
+      c_array = MagneticCoordinateCurve(c, eval.(coords)...)
 
-      for p in coord_perms
-        leftover = setdiff(coords, p)[]
-        for cp in p
-          eval(Expr(:(=), cp, 0:2π/8:2π))
-        end
-        eval(Expr(:(=), leftover, 0.0))
-        c_array = MagneticCoordinateArray(c, eval.(coords)..., grid = false)
-
-        @test typeof(c_array) == Array{c{Float64,Float64},1}
-        @test length(c_array) == 9
-        @test c_array[5] == c{Float64,Float64}(
-          :α in p ? π_float : 0.0,
-          :β in p ? π_float : 0.0,
-          :η in p ? π_float : 0.0,
-        )
-
-        # Check for incompatible dimensions
-        for (i, cp) in enumerate(p)
-          eval(Expr(:(=), cp, 0:2π/(8+iseven(i)):2π))
-        end
-        @test_throws DimensionMismatch MagneticCoordinateArray(
-          c,
-          eval.(coords)...,
-          grid = false,
-        )
-      end
-
-      @testset "Vector_3args" begin
-        c = ClebschCoordinates
-        α = 0:0.2:1
-        β = 0:2π/4:2π
-        η = 0:2π/8:2π
-        π_float = convert(Float64, π)
-
-        c_array = MagneticCoordinateArray(c, α, β, η, grid = true)
-        @test typeof(c_array) == Array{c{Float64,Float64},3}
-        @test size(c_array) == (9, 6, 5)
-        @test c_array[5, 3, 3] == c{Float64,Float64}(0.4, π_float, π_float)
-
-        c_array =
-          MagneticCoordinateArray(c, α, β, η, grid = true, keep_order = true)
-        @test size(c_array) == (6, 5, 9)
-        @test c_array[3, 3, 5] == c{Float64,Float64}(0.4, π_float, π_float)
-
-        c_array =
-          MagneticCoordinateArray(c, α, β, η, grid = true, dim_order = [2, 3, 1])
-        @test size(c_array) == (5, 9, 6)
-        @test c_array[3, 5, 3] == c{Float64,Float64}(0.4, π_float, π_float)
-
-        @test_throws DimensionMismatch MagneticCoordinateArray(
-          c,
-          α,
-          β,
-          η,
-          grid = false,
-        )
-        β = η
-        @test_throws DimensionMismatch MagneticCoordinateArray(
-          c,
-          α,
-          β,
-          η,
-          grid = false,
-        )
-        α = η
-
-        c_array = MagneticCoordinateArray(c, α, β, η, grid = false)
-        @test typeof(c_array) == Array{c{Float64,Float64},1}
-        @test length(c_array) == 9
-        @test c_array[5] == c{Float64,Float64}(π_float, π_float, π_float)
-      end
+      @test size(c_array) == (9,)
+      @test c_array[5] == c{Float64,Float64}(
+        :α in p ? π_float : 0.0,
+        :β in p ? π_float : 0.0,
+        :η in p ? π_float : 0.0,
+      )
     end
-    =#
+  end
+
+  @testset "MagneticCoordinateCurve - 3 Vector Arguments" begin
+    c = ClebschCoordinates
+    α = 0:0.2:1
+    β = 0:2π/4:2π
+    η = 0:2π/8:2π
+    π_float = convert(Float64, π)
+
+    @test_throws DimensionMismatch MagneticCoordinateCurve(c, α, β, η)
+    β = η
+    α = fill(0.5, length(η))
+    c_array = MagneticCoordinateCurve(c, α, β, η)
+    @test size(c_array) == (9,)
+    @test c_array[5] == c{Float64,Float64}(0.5, π_float, π_float)
+  end
 end
