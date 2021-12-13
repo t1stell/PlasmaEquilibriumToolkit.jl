@@ -164,6 +164,8 @@ function Bfield!(Bvec::AbstractArray{CoordinateVector},
   size(Bvec) == size(x) || throw(DimensionMismatch("Incompatible dimensions in Bfield!"))
   @batch minbatch=16 for i in eachindex(Bvec,x) 
     Bvec[i] = Bfield(x[i],eq) 
+  @batch minbatch=16 for i in eachindex(Bvec,x)
+    Bvec[i] = Bfield(x[i],eq)
   end
 end
 
@@ -197,6 +199,9 @@ Computes the projection of B × ∇B/B² onto the perpendicular coordinate vecto
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 """
 function curvatureProjection(e::BasisVectors, gradB::CoordinateVector)
+function gradBProjection(e::BasisVectors,
+                             gradB::CoordinateVector;
+                            )
   #K1 = (B × ∇B)/B² ⋅ ∇X
   #K2 = (B × ∇B)/B² ⋅ ∇Y
   B = cross(e[:, 1], e[:, 2])
@@ -211,6 +216,7 @@ end
 #b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
 #
 function curvatureProjection(e::AbstractArray{BasisVectors{T}},
+function gradBProjection(e::AbstractArray{BasisVectors{T}},
                              gradB::AbstractArray{CoordinateVector{T}};
                             ) where {T}
   size(e) == size(gradB) || throw(DimensionMismatch("Incompatible dimensions in curvatureProjection"))
@@ -223,6 +229,10 @@ end
 
 # ∇P = dP/dX ∇X for B = ∇X × ∇Y
 function curvatureProjection(e::BasisVectors,gradB::CoordinateVector,gradP::T) where T
+function gradBProjection(e::BasisVectors,
+                             gradB::CoordinateVector,
+                             gradP::T;
+                            ) where T
   K1, K2 = curvatureProjection(e,gradB)
   return K1, K2 + 4π*1e-7*norm(cross(e[:,1],e[:,2]))*gradP
 end
@@ -239,11 +249,17 @@ function normalCurvature(
   gradX::CoordinateVector,
   gradY::CoordinateVector,
 )
+function normalCurvature(B::CoordinateVector{T},
+                         gradB::CoordinateVector{T},
+                         gradX::CoordinateVector{T},
+                         gradY::CoordinateVector{T};
+                        ) where {T}
   # κₙ = (B × ∇B) ⋅ ((∇ψ⋅∇ψ)∇α - (∇ψ⋅∇α)∇ψ)/(B³|∇ψ|)
   return dot(
     cross(B, gradB),
     gradY * dot(gradX, gradX) .- gradX * dot(gradX, gradY),
   ) / (norm(B)^3 * norm(gradX))
+  return dot(cross(B, gradB),gradY * dot(gradX, gradX) .- gradX * dot(gradX, gradY)) / (norm(B)^3 * norm(gradX))
 end
 
 """
@@ -257,6 +273,10 @@ function geodesicCurvature(
   gradB::CoordinateVector,
   gradX::CoordinateVector,
 )
+function geodesicCurvature(B::CoordinateVector{T},
+                           gradB::CoordinateVector{T},
+                           gradX::CoordinateVector{T};
+                          ) where {T}
   # κ_g = -(B × ∇B) ⋅ ∇ψ/(B²|∇ψ|)
   return -dot(cross(B, gradB), gradX) / (norm(B)^2 * norm(gradX))
 end
@@ -299,8 +319,14 @@ end
     metric2(e::BasisVectors)
 
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…]
+Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g12 = `e[:,1]*e[:,2]`,…]
 """
 function metric(e::BasisVectors, i::Integer, j::Integer)
+
+function metric(e::BasisVectors{T},
+                i::Integer,
+                j::Integer;
+               ) where {T}
   return dot(e[:, i], e[:, j])
 end
 
@@ -328,6 +354,10 @@ function metric(
   u::Integer,
   v::Integer,
 ) where {T}
+function metric(e::AbstractArray{BasisVectors{T}},
+                u::Integer,
+                v::Integer,
+               ) where {T}
   res = Array{T}(undef, size(e))
   @batch minbatch=16 for i in eachindex(res,e)
     res[i] = metric(e[i], u, v)
