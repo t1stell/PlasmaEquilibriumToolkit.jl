@@ -89,7 +89,7 @@ function transform_basis(t::BasisTransformation, e::BasisVectors{T}) where {T}
 end
 
 function transform_basis(
-  t::Transformation,
+  t::BasisTransformation,
   e::AbstractArray{BasisVectors{T}},
   J::AbstractArray{T},
 ) where {T}
@@ -104,7 +104,7 @@ end
 
 
 function transform_basis(
-  t::Transformation,
+  t::BasisTransformation,
   e::AbstractArray{BasisVectors{T}},
 ) where {T}
   res = similar(e)
