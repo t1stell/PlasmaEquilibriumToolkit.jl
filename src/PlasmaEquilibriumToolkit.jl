@@ -37,7 +37,7 @@ export transform_basis, jacobian
 # Derived quantities
 export gradB, curvatureProjection, curvatureComponents
 export normalCurvature, geodesicCurvature, metric
-export gradB, Bnorm, Bfield
+export gradB, B_norm, B_field
 
 
 include("Types.jl")
