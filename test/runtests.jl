@@ -7,3 +7,4 @@ using Test
 
 include("magnetic_coordinate_tests.jl")
 include("transformation_tests.jl")
+include("derived_tests.jl")
