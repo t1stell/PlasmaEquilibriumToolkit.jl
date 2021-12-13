@@ -200,7 +200,6 @@ end
 Computes the projection of B × ∇B/B² onto the perpendicular coordinate vectors given by
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 """
-
 function gradBProjection(e::BasisVectors,
                          gradB::CoordinateVector;
                         )
@@ -245,12 +244,6 @@ end
 Computes the normal curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κₙ = (B × ∇B) ⋅ ((∇X⋅∇X)∇Y - (∇X⋅∇Y)∇X)/(B³|∇X|)
 """
-function normalCurvature(
-  B::CoordinateVector,
-  gradB::CoordinateVector,
-  gradX::CoordinateVector,
-  gradY::CoordinateVector,
-)
 function normalCurvature(B::CoordinateVector{T},
                          gradB::CoordinateVector{T},
                          gradX::CoordinateVector{T},
@@ -270,11 +263,6 @@ end
 Computes the geodesic curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κ_g = -(B × ∇B) ⋅ ∇X/(B²|∇X|)
 """
-function geodesicCurvature(
-  B::CoordinateVector,
-  gradB::CoordinateVector,
-  gradX::CoordinateVector,
-)
 function geodesicCurvature(B::CoordinateVector{T},
                            gradB::CoordinateVector{T},
                            gradX::CoordinateVector{T};
@@ -325,8 +313,6 @@ end
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…]
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g12 = `e[:,1]*e[:,2]`,…]
 """
-function metric(e::BasisVectors, i::Integer, j::Integer)
-
 function metric(e::BasisVectors{T},
                 i::Integer,
                 j::Integer;
@@ -353,11 +339,6 @@ function metric(e::AbstractArray{BasisVectors{T}}) where {T}
   return res
 end
 
-function metric(
-  e::AbstractArray{BasisVectors{T}},
-  u::Integer,
-  v::Integer,
-) where {T}
 function metric(e::AbstractArray{BasisVectors{T}},
                 u::Integer,
                 v::Integer,
