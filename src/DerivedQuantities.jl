@@ -200,7 +200,9 @@ end
 Computes the projection of B × ∇B/B² onto the perpendicular coordinate vectors given by
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 """
-function curvatureProjection(e::BasisVectors, gradB::CoordinateVector)
+function gradBProjection(e::BasisVectors,
+                         gradB::CoordinateVector;
+                        )
   #K1 = (B × ∇B)/B² ⋅ ∇X
   #K2 = (B × ∇B)/B² ⋅ ∇Y
   B = cross(e[:, 1], e[:, 2])
@@ -214,15 +216,14 @@ end
 #b × ∇B = dbdy*bx ∇x × ∇y + dbdz*bx ∇x × ∇z + dbdx*by ∇y × ∇x + dbdz*by ∇y × ∇z + dbdx*bz ∇z × ∇x + dbdy*bz ∇z × ∇y
 #b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
 #
-function curvatureProjection(
-  e::AbstractArray{BasisVectors{T}},
-  gradB::AbstractArray{CoordinateVector{T}},
-) where {T}
-  size(e) == size(gradB) ||
-    throw(DimensionMismatch("Incompatible dimensions in curvatureProjection"))
-  res = Array{Tuple{T,T}}(undef, size(e))
-  @batch minbatch = 16 for i in eachindex(e, gradB, res)
-    res[i] = curvatureProjection(e[i], gradB[i])
+
+function gradBProjection(e::AbstractArray{BasisVectors{T}},
+                         gradB::AbstractArray{CoordinateVector{T}};
+                        ) where {T}
+  size(e) == size(gradB) || throw(DimensionMismatch("Incompatible dimensions in curvatureProjection"))
+  res = Array{Tuple{T,T}}(undef,size(e))
+  @batch minbatch=16 for i in eachindex(e,gradB,res)
+    res[i] = curvatureProjection(e[i],gradB[i])
   end
   return res
 end
@@ -243,17 +244,17 @@ end
 Computes the normal curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κₙ = (B × ∇B) ⋅ ((∇X⋅∇X)∇Y - (∇X⋅∇Y)∇X)/(B³|∇X|)
 """
-function normalCurvature(
-  B::CoordinateVector,
-  gradB::CoordinateVector,
-  gradX::CoordinateVector,
-  gradY::CoordinateVector,
-)
+function normalCurvature(B::CoordinateVector{T},
+                         gradB::CoordinateVector{T},
+                         gradX::CoordinateVector{T},
+                         gradY::CoordinateVector{T};
+                        ) where {T}
   # κₙ = (B × ∇B) ⋅ ((∇ψ⋅∇ψ)∇α - (∇ψ⋅∇α)∇ψ)/(B³|∇ψ|)
   return dot(
     cross(B, gradB),
     gradY * dot(gradX, gradX) .- gradX * dot(gradX, gradY),
   ) / (norm(B)^3 * norm(gradX))
+  return dot(cross(B, gradB),gradY * dot(gradX, gradX) .- gradX * dot(gradX, gradY)) / (norm(B)^3 * norm(gradX))
 end
 
 """
@@ -262,11 +263,10 @@ end
 Computes the geodesic curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κ_g = -(B × ∇B) ⋅ ∇X/(B²|∇X|)
 """
-function geodesicCurvature(
-  B::CoordinateVector,
-  gradB::CoordinateVector,
-  gradX::CoordinateVector,
-)
+function geodesicCurvature(B::CoordinateVector{T},
+                           gradB::CoordinateVector{T},
+                           gradX::CoordinateVector{T};
+                          ) where {T}
   # κ_g = -(B × ∇B) ⋅ ∇ψ/(B²|∇ψ|)
   return -dot(cross(B, gradB), gradX) / (norm(B)^2 * norm(gradX))
 end
@@ -311,8 +311,12 @@ end
     metric2(e::BasisVectors)
 
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…]
+Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g12 = `e[:,1]*e[:,2]`,…]
 """
-function metric(e::BasisVectors, i::Integer, j::Integer)
+function metric(e::BasisVectors{T},
+                i::Integer,
+                j::Integer;
+               ) where {T}
   return dot(e[:, i], e[:, j])
 end
 
@@ -335,11 +339,10 @@ function metric(e::AbstractArray{BasisVectors{T}}) where {T}
   return res
 end
 
-function metric(
-  e::AbstractArray{BasisVectors{T}},
-  u::Integer,
-  v::Integer,
-) where {T}
+function metric(e::AbstractArray{BasisVectors{T}},
+                u::Integer,
+                v::Integer,
+               ) where {T}
   res = Array{T}(undef, size(e))
   @batch minbatch = 16 for i in eachindex(res, e)
     res[i] = metric(e[i], u, v)
