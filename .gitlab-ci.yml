@@ -23,7 +23,7 @@ Julia 1.6:
     - .coverage
 CompatHelper:
   image: julia:1.6
-  stage: compat
+  stage: build
   before_script:
     - apt-get update -qq && apt-get install -y git
     - |
