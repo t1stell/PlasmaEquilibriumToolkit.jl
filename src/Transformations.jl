@@ -62,14 +62,6 @@ return 1.0 /dot(e[:,1],cross(e[:,2],e[:,3]))
 end
 
 """
-    transform_basis(t::BasisTransformation,e::BasisVectors{T},J::T)
-
-Transform the covariant/contravariant basis given by `e` to a
-contravariant/covariant basis using the dual relations determined by `t` and the provided jacobian `J`.
-"""
-
-
-"""
     transform_basis(t::BasisTransformation, e::BasisVectors)
     transform_basis(t::BasisTransformation, e::BasisVectors, jacobian)
     transform_basis(t::BasisTransformation, e::AbstractArray{BasisVectors})

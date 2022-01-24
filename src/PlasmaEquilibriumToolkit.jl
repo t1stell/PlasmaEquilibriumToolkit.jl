@@ -26,7 +26,7 @@ export CylindricalFromFlux, CylindricalFromPest, CylindricalFromBoozer
 export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
 
 # Basis vector quantities
-export BasisTypes, Covariant, Contravariant
+export BasisTransformation, BasisTypes, Covariant, Contravariant
 export CoordinateVector, BasisVectors
 export basis_vectors
 
