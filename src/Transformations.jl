@@ -61,6 +61,24 @@ function jacobian(::Contravariant,
 return 1.0 /dot(e[:,1],cross(e[:,2],e[:,3]))
 end
 
+
+function jacobian(x::C,
+                  eq::E,
+                 ) where {C <: AbstractMagneticCoordinates,
+                          E <: AbstractMagneticEquilibrium}
+  throw(ArgumentError("jacobian with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented"))
+end
+
+function jacobian(x::AbstractArray,
+                  eq::E,
+                 ) where {E <: AbstractMagneticEquilibrium}
+  res = Array{typeof(getfield(first(x), 1)), ndims(x)}(undef, size(x))
+  @batch minbatch=16 for i in eachindex(x, res)
+    res[i] = jacobian(x[i], eq)
+  end
+  return res
+end
+
 """
     transform_basis(t::BasisTransformation, e::BasisVectors)
     transform_basis(t::BasisTransformation, e::BasisVectors, jacobian)

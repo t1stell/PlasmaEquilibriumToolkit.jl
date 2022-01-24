@@ -62,16 +62,22 @@ function B_norm!(B::AbstractArray{T},
 end
 
 function B_field(::Contravariant,
-  e::BasisVectors;
- )
-return cross(e[:, 1], e[:, 2])
+                 e::BasisVectors;
+                )
+  return cross(e[:, 1], e[:, 2])
+end
+
+function B_norm(::Covariant,
+                e::BasisVectors;
+               )
+throw(ArgumentError("Rotational transform required to compute B_field with covariant basis vectors!"))
 end
 
 function B_field(::Covariant,
-  e::BasisVectors, 
-  ι::Real;
- )
-return 1.0 / jacobian(Covariant(), e) * (e[:, 3] + ι * e[:, 2])
+                 e::BasisVectors, 
+                 ι::Real;
+                )
+  return 1.0 / jacobian(Covariant(), e) * (e[:, 3] + ι * e[:, 2])
 end
 
 function B_field(e::BasisVectors)
@@ -178,28 +184,25 @@ function B_field!(Bvec::AbstractArray{CoordinateVector},
 end
 
 function grad_B(x::C,
+                eq::E;
+               ) where {E <: AbstractMagneticEquilibrium}
+  throw(ArgumentError(
+    "grad_B with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
+  )) 
+end    
+
+function grad_B(x::C,
                 e::BasisVectors,
                 eq::E,
                ) where {C <: AbstractMagneticCoordinates,
                        E <: AbstractMagneticEquilibrium}
   throw(ArgumentError(
-      "gradB with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
+      "grad_B with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
     ))
 end
 
-function jacobian(x::C,
-                  eq::E,
-                 ) where {C <: AbstractMagneticCoordinates,
-                          E <: AbstractMagneticEquilibrium}
-  throw(
-    ArgumentError(
-      "jacobian with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
-    ),
-  )
-end
-
 """
-    gradBProjection(e::BasisVectors,∇B::CoordinateVector)
+    grad_B_projection(e::BasisVectors,∇B::CoordinateVector)
 
 Computes the projection of B × ∇B/B² onto the perpendicular coordinate vectors given by
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
