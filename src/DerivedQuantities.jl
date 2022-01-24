@@ -158,7 +158,7 @@ function B_field(x::C,
 end
 
 function B_field(x::AbstractArray,
-                 eq::ET,
+                 eq::E,
                 ) where {E <: AbstractMagneticEquilibrium}
   T = typeof(getfield(first(x), 1))
   res = Array{CoordinateVector{T}}(undef, size(x))
