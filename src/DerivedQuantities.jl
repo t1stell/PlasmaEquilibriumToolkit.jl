@@ -67,7 +67,7 @@ function B_field(::Contravariant,
   return cross(e[:, 1], e[:, 2])
 end
 
-function B_norm(::Covariant,
+function B_field(::Covariant,
                 e::BasisVectors;
                )
 throw(ArgumentError("Rotational transform required to compute B_field with covariant basis vectors!"))
@@ -185,7 +185,8 @@ end
 
 function grad_B(x::C,
                 eq::E;
-               ) where {E <: AbstractMagneticEquilibrium}
+               ) where {C <: AbstractMagneticCoordinates,
+                        E <: AbstractMagneticEquilibrium}
   throw(ArgumentError(
     "grad_B with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
   )) 
