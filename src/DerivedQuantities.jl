@@ -149,21 +149,19 @@ function B_field(
   )
 end
 
-function B_field(
-  x::AbstractArray{MC},
-  eq::ET,
-) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium}
+function B_field(x::AbstractArray{MC},
+                 eq::ET,
+                ) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium}
   T = typeof(getfield(first(x), 1))
   res = Array{CoordinateVector{T}}(undef, size(x))
   B_field!(res, x, eq)
   return res
 end
 
-function B_field!(
-  Bvec::AbstractArray{CoordinateVector},
-  x::AbstractArray{MC},
-  eq::ET,
-) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium,T}
+function B_field!(Bvec::AbstractArray{CoordinateVector},
+                  x::AbstractArray{MC},
+                  eq::ET,
+                 ) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium,T}
   size(Bvec) == size(x) ||
     throw(DimensionMismatch("Incompatible dimensions in B_field!"))
   @batch minbatch = 16 for i in eachindex(Bvec, x)
@@ -171,22 +169,18 @@ function B_field!(
   end
 end
 
-function gradB(
-  x::MC,
-  e::BasisVectors,
-  eq::ET,
-) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium}
-  throw(
-    ArgumentError(
+function gradB(x::MC,
+               e::BasisVectors,
+               eq::ET,
+              ) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium}
+  throw(ArgumentError(
       "gradB with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
-    ),
-  )
+    ))
 end
 
-function jacobian(
-  x::MC,
-  eq::ET,
-) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium}
+function jacobian(x::MC,
+                  eq::ET,
+                 ) where {MC<:AbstractMagneticCoordinates,ET<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "jacobian with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -195,12 +189,12 @@ function jacobian(
 end
 
 """
-    curvatureProjection(e::BasisVectors,gradB::CoordinateVector)
+    gradBProjection(e::BasisVectors,gradB::CoordinateVector)
 
 Computes the projection of B × ∇B/B² onto the perpendicular coordinate vectors given by
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 """
-function gradBProjection(e::BasisVectors,
+function grad_B_projection(e::BasisVectors,
                          gradB::CoordinateVector;
                         )
   #K1 = (B × ∇B)/B² ⋅ ∇X
@@ -217,7 +211,7 @@ end
 #b × ∇B ⋅ ∇x = dbdz*by ∇x ⋅ ∇y × ∇x - dbdy*bz ∇x ⋅ ∇y × ∇z = 1/√g*(dbdz*by - dbdy bz)
 #
 
-function gradBProjection(e::AbstractArray{BasisVectors{T}},
+function grad_B_projection(e::AbstractArray{BasisVectors{T}},
                          gradB::AbstractArray{CoordinateVector{T}};
                         ) where {T}
   size(e) == size(gradB) || throw(DimensionMismatch("Incompatible dimensions in curvatureProjection"))
@@ -229,12 +223,11 @@ function gradBProjection(e::AbstractArray{BasisVectors{T}},
 end
 
 # ∇P = dP/dX ∇X for B = ∇X × ∇Y
-function curvatureProjection(
-  e::BasisVectors,
-  gradB::CoordinateVector,
-  gradP::T,
-) where {T}
-  K1, K2 = curvatureProjection(e, gradB)
+function grad_B_projection(e::BasisVectors,
+                             gradB::CoordinateVector,
+                             gradP::T,
+                            ) where {T}
+  K1, K2 = gradBProjection(e, gradB)
   return K1, K2 + 4π * 1e-7 * norm(cross(e[:, 1], e[:, 2])) * gradP
 end
 
@@ -244,7 +237,7 @@ end
 Computes the normal curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κₙ = (B × ∇B) ⋅ ((∇X⋅∇X)∇Y - (∇X⋅∇Y)∇X)/(B³|∇X|)
 """
-function normalCurvature(B::CoordinateVector{T},
+function normal_curvature(B::CoordinateVector{T},
                          gradB::CoordinateVector{T},
                          gradX::CoordinateVector{T},
                          gradY::CoordinateVector{T};
@@ -258,12 +251,12 @@ function normalCurvature(B::CoordinateVector{T},
 end
 
 """
-    geodesicCurvature(b::CoordinateVector,gradB::CoordinateVector,gradX::CoordinateVector)
+    geodesic_curvature(b::CoordinateVector,gradB::CoordinateVector,gradX::CoordinateVector)
 
 Computes the geodesic curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κ_g = -(B × ∇B) ⋅ ∇X/(B²|∇X|)
 """
-function geodesicCurvature(B::CoordinateVector{T},
+function geodesic_curvature(B::CoordinateVector{T},
                            gradB::CoordinateVector{T},
                            gradX::CoordinateVector{T};
                           ) where {T}
@@ -272,14 +265,14 @@ function geodesicCurvature(B::CoordinateVector{T},
 end
 
 """
-    curvatureComponents(e::BasisVectors,gradB::CoordinateVector)
+    curvature_components(e::BasisVectors,gradB::CoordinateVector)
 
 Computes the normal and geodesic curvature vectors for a stright field line coordinate system with basis vectors
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 
 See also: [`normalCurvature`](@ref), [`geodesicCurvature`](@ref)
 """
-function curvatureComponents(
+function curvature_components(
   contravariantBasis::BasisVectors{T},
   gradB::CoordinateVector{T},
 ) where {T}
@@ -293,7 +286,7 @@ function curvatureComponents(
   geodesicCurvature(B, gradB, contravariantBasis[:, 1])
 end
 
-function curvatureComponents(
+function curvature_components(
   contravariantBasis::AbstractArray{BasisVectors{T}},
   ∇B::AbstractArray{CoordinateVector{T}},
 ) where {T}

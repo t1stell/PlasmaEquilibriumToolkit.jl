@@ -35,9 +35,9 @@ export CovariantFromContravariant, ContravariantFromCovariant
 export transform_basis, jacobian
 
 # Derived quantities
-export gradB, curvatureProjection, curvatureComponents
-export normalCurvature, geodesicCurvature, metric
-export gradB, B_norm, B_field
+export grad_B, grad_B_projection, curvature_components
+export normal_curvature, geodesic_curvature, metric
+export grad_B, B_norm, B_field
 
 
 include("Types.jl")
