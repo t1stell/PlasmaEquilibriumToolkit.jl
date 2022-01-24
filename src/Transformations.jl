@@ -21,7 +21,7 @@ struct CovariantFromContravariant <: BasisTransformation end
 Compute the L2 norm of the basis vector `e`.  If `component` > 0 and <= 3, the L2 norm of the component is returned.
 
 #  Examples
-```jldoctest
+```
 julia> using StaticArrays
 
 julia> e = @SArray([1 4 7;2 5 8;3 6 9]);

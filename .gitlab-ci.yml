@@ -21,6 +21,7 @@ Julia 1.6:
   extends:
     - .script
     - .coverage
+    
 pages:
   image: julia:1.6
   stage: deploy
@@ -29,7 +30,7 @@ pages:
     - |
       julia --project=docs -e '
         using Pkg
-        Pkg.activate(pwd())
+        Pkg.develop(PackageSpec(path=pwd()))
         Pkg.instantiate()
         using Documenter: doctest
         using PlasmaEquilibriumToolkit
