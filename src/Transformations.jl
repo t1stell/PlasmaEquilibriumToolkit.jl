@@ -129,10 +129,20 @@ function transform_basis(t::BasisTransformation,
 end
 
 """
-    transform_basis(t::Transformation,x::AbstracyArray{CT},e::AbstractArray{BasisVectors{T}},eq::AbstractMagneticEquilibrium) where CT <: AbstractMagneticCoordinates
+
+    transform_basis(t::Transformation,x::AbstracyArray{AbstractMagneticCoordinates},e::AbstractArray{BasisVectors{T}},eq::AbstractMagneticEquilibrium)
 
 Perform a change of basis for magnetic coordinates denoted by the transformation `t`, using the provided coordinate charts and basis vectors.
 """
+function transform_basis(t::Transformation,
+                         x::C,
+                         e::BasisVectors,
+                         eq::E;
+                        ) where {C <: AbstractMagneticCoordinates,
+                                 E <: AbstractMagneticEquilibrium}
+  throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typoeof(eq)) not yet impleented"))
+end
+
 function transform_basis(t::Transformation,
                          x::AbstractArray,
                          e::AbstractArray{BasisVectors},
@@ -195,7 +205,7 @@ end
 function (t::Transformation)(x::AbstractArray{T},
                              eq::E,
                             ) where {T <: AbstractMagneticCoordinates, 
-                                     E<:AbstractMagneticEquilibrium}
+                                     E <: AbstractMagneticEquilibrium}
   res = Array{typeof(t(first(x), eq)),ndims(x)}(undef, size(x))
   @batch minbatch = 16 for i ∈ eachindex(x)
     res[i] = t(x[i], eq)
