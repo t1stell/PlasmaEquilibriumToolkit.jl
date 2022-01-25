@@ -220,13 +220,12 @@ function basis_vectors(B::BasisType,
 end
 
 # `t` needs to be a singleton type
-function (t::Transformation)(x::AbstractArray{T},
+function (t::Transformation)(x::AbstractArray,
                              eq::E,
-                            ) where {T <: AbstractMagneticCoordinates, 
-                                     E <: AbstractMagneticEquilibrium}
-  res = Array{typeof(t(first(x), eq)),ndims(x)}(undef, size(x))
+                            ) where {E <: AbstractMagneticEquilibrium}
+  res = Array{typeof(t(first(x), eq)), ndims(x)}(undef, size(x))
   @batch minbatch = 16 for i ∈ eachindex(x, res)
     res[i] = t(x[i], eq)
   end
-  return isstructtype(eltype(res)) && ismutabletype(eltype(res)) ? StructArray(res) : res
+  return isstructtype(eltype(res)) ? StructArray(res) : res
 end
