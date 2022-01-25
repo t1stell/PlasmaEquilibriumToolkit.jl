@@ -225,8 +225,8 @@ function (t::Transformation)(x::AbstractArray{T},
                             ) where {T <: AbstractMagneticCoordinates, 
                                      E <: AbstractMagneticEquilibrium}
   res = Array{typeof(t(first(x), eq)),ndims(x)}(undef, size(x))
-  @batch minbatch = 16 for i ∈ eachindex(x)
+  @batch minbatch = 16 for i ∈ eachindex(x, res)
     res[i] = t(x[i], eq)
   end
-  return res
+  return isstructtype(eltype(res)) && ismutabletype(eltype(res)) ? StructArray(res) : res
 end
