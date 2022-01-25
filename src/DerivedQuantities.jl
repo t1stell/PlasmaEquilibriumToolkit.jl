@@ -125,8 +125,8 @@ end
 
 function B_norm(x::C,
                 eq::E,
-               ) where {C <: AbstractMagneticCoordinates,
-                        E <: AbstractMagneticEquilibrium}
+               ) where {C<:AbstractMagneticCoordinates,
+                        E<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "B_norm with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -136,7 +136,7 @@ end
 
 function B_norm(x::AbstractArray,
                 eq::E,
-               ) where {E <: AbstractMagneticEquilibrium}
+               ) where {E<:AbstractMagneticEquilibrium}
   T = typeof(getfield(first(x), 1))
   res = Array{T}(undef, size(x))
   B_norm!(res, x, eq)
@@ -146,7 +146,7 @@ end
 function B_norm!(B::AbstractArray,
                  x::AbstractArray,
                  eq::E,
-                ) where {E <: AbstractMagneticEquilibrium}
+                ) where {E<:AbstractMagneticEquilibrium}
   size(B) == size(x) || throw(DimensionMismatch("Incompatible dimensions in B_norm!"))
   @batch minbatch = 16 for i in eachindex(x, B)
     B[i] = B_norm(x[i], eq)
@@ -155,8 +155,8 @@ end
 
 function B_field(x::C,
                  eq::E,
-                ) where {C <: AbstractMagneticCoordinates,
-                         E <: AbstractMagneticEquilibrium}
+                ) where {C<:AbstractMagneticCoordinates,
+                         E<:AbstractMagneticEquilibrium}
   throw(
     ArgumentError(
       "B_field with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
@@ -166,7 +166,7 @@ end
 
 function B_field(x::AbstractArray,
                  eq::E,
-                ) where {E <: AbstractMagneticEquilibrium}
+                ) where {E<:AbstractMagneticEquilibrium}
   T = typeof(getfield(first(x), 1))
   res = Array{CoordinateVector{T}}(undef, size(x))
   B_field!(res, x, eq)
@@ -176,7 +176,7 @@ end
 function B_field!(B_vec::AbstractArray{CoordinateVector{T}},
                   x::AbstractArray,
                   eq::E,
-                 ) where {T, E <: AbstractMagneticEquilibrium}
+                 ) where {T, E<:AbstractMagneticEquilibrium}
   size(B_vec) == size(x) ||
     throw(DimensionMismatch("Incompatible dimensions in B_field!"))
   @batch minbatch = 16 for i in eachindex(B_vec, x)
@@ -186,8 +186,8 @@ end
 
 function grad_B(x::C,
                 eq::E;
-               ) where {C <: AbstractMagneticCoordinates,
-                        E <: AbstractMagneticEquilibrium}
+               ) where {C<:AbstractMagneticCoordinates,
+                        E<:AbstractMagneticEquilibrium}
   throw(ArgumentError(
     "grad_B with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
   )) 
@@ -196,11 +196,49 @@ end
 function grad_B(x::C,
                 e::BasisVectors{T},
                 eq::E,
-               ) where {T, C <: AbstractMagneticCoordinates,
-                        E <: AbstractMagneticEquilibrium}
+               ) where {T, C<:AbstractMagneticCoordinates,
+                        E<:AbstractMagneticEquilibrium}
   throw(ArgumentError(
       "grad_B with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
     ))
+end
+
+function grad_B(x::AbstractArray,
+                eq::E;
+               ) where {E<:AbstractMagneticEquilibrium}
+  res = Array{CoordinateVector{typeof(getfield(first(x), 1))}, ndims(x)}(undef, size(x))
+  grad_B!(res, x, eq)
+  return res
+end
+
+function grad_B(x::AbstractArray,
+                e::AbstractArray{BasisVectors{T}},
+                eq::E,
+               ) where {T, E<:AbstractMagneticEquilibrium}
+  size(x) == size(e) || throw(DimensionMismatch("Incorrect input array sizes in grad_B"))
+  res = Array{CoordinateVector{T}, ndims(x)}(undef, size(x))
+  grad_B!(res, x, e, eq)
+end
+
+function grad_B!(res::AbstractArray{CoordinateVector{T}},
+                 x::AbstractArray,
+                 eq::E;
+                ) where {T, E<:AbstractMagneticEquilibrium}
+  size(res) == size(x) || throw(DimensionMismatch("Incorrect dimensions for input arrays in grad_B!"))
+  @batch minbatch=16 for i in eachindex(res, x)
+    res[i] = grad_B(x[i], eq)
+  end
+end
+
+function grad_B!(res::AbstractArray{CoordinateVector{T}},
+                 x::AbstractArray,
+                 e::AbstractArray{BasisVectors{T}},
+                 eq::E;
+                ) where {T, E<:AbstractMagneticEquilibrium}
+  size(res) == size(x) && size(x) == size(e) || throw(DimensionMismatch("Incorrect dimensions for input arrays in grad_B!"))
+  @batch minbatch=16 for i in eachindex(res, x, e)
+    res[i] = grad_B(x[i], e[i], eq)
+  end
 end
 
 """
