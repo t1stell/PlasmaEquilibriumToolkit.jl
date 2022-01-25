@@ -48,4 +48,7 @@ include("DerivedQuantities.jl")
 
 # Specialzed coordinate defintions, transformations, routines for different codes
 include("Specializations.jl")
+
+const PET = PlasmaEquilibriumToolkit
+export PET
 end

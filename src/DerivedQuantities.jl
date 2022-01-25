@@ -1,24 +1,25 @@
 
 function B_norm(::Contravariant, 
-                e::BasisVectors;
-               )
+                e::BasisVectors{T};
+               ) where {T}
   return norm(cross(e[:, 1], e[:, 2]), 2)
 end
 
 function B_norm(::Covariant,
-                e::BasisVectors;
-               )
+                e::BasisVectors{T};
+               ) where {T}
   throw(ArgumentError("Rotational transform required to compute B_norm with covariant basis vectors!"))
 end
 
 function B_norm(::Covariant, 
-                e::BasisVectors,
+                e::BasisVectors{T},
                 ι::Real;
-               )
+               ) where {T}
   return norm(1.0 / jacobian(Covariant(), e) * (e[:, 3] + ι * e[:, 2]), 2)
 end
 
-function B_norm(e::BasisVectors)
+function B_norm(e::BasisVectors{T};
+               ) where {T}
   return B_norm(Contravariant(), e)
 end
 
@@ -172,14 +173,14 @@ function B_field(x::AbstractArray,
   return res
 end
 
-function B_field!(Bvec::AbstractArray{CoordinateVector},
+function B_field!(B_vec::AbstractArray{CoordinateVector{T}},
                   x::AbstractArray,
                   eq::E,
-                 ) where {E <: AbstractMagneticEquilibrium}
-  size(Bvec) == size(x) ||
+                 ) where {T, E <: AbstractMagneticEquilibrium}
+  size(B_vec) == size(x) ||
     throw(DimensionMismatch("Incompatible dimensions in B_field!"))
-  @batch minbatch = 16 for i in eachindex(Bvec, x)
-    Bvec[i] = B_field(x[i], eq)
+  @batch minbatch = 16 for i in eachindex(B_vec, x)
+    B_vec[i] = B_field(x[i], eq)
   end
 end
 
@@ -193,10 +194,10 @@ function grad_B(x::C,
 end    
 
 function grad_B(x::C,
-                e::BasisVectors,
+                e::BasisVectors{T},
                 eq::E,
-               ) where {C <: AbstractMagneticCoordinates,
-                       E <: AbstractMagneticEquilibrium}
+               ) where {T, C <: AbstractMagneticCoordinates,
+                        E <: AbstractMagneticEquilibrium}
   throw(ArgumentError(
       "grad_B with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented",
     ))
@@ -208,9 +209,9 @@ end
 Computes the projection of B × ∇B/B² onto the perpendicular coordinate vectors given by
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 """
-function grad_B_projection(e::BasisVectors,
-                           ∇B::CoordinateVector;
-                        )
+function grad_B_projection(e::BasisVectors{T},
+                           ∇B::CoordinateVector{T};
+                        ) where {T}
   #K1 = (B × ∇B)/B² ⋅ ∇X
   #K2 = (B × ∇B)/B² ⋅ ∇Y
   B = cross(e[:, 1], e[:, 2])
@@ -237,8 +238,8 @@ function grad_B_projection(e::AbstractArray{BasisVectors{T}},
 end
 
 # ∇P = dP/dX ∇X for B = ∇X × ∇Y
-function grad_B_projection(e::BasisVectors,
-                           ∇B::CoordinateVector,
+function grad_B_projection(e::BasisVectors{T},
+                           ∇B::CoordinateVector{T},
                            ∇P::T,
                           ) where {T}
   K1, K2 = grad_B_projection(e, ∇B)
@@ -309,14 +310,15 @@ end
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…]
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g12 = `e[:,1]*e[:,2]`,…]
 """
-function metric(e::BasisVectors,
+function metric(e::BasisVectors{T},
                 i::Integer,
                 j::Integer;
-               )
+               ) where {T}
   return dot(e[:, i], e[:, j])
 end
 
-function metric(e::BasisVectors)
+function metric(e::BasisVectors{T};
+               ) where {T}
   return SVector(
     dot(e[:, 1], e[:, 1]),
     dot(e[:, 1], e[:, 2]),
@@ -327,7 +329,8 @@ function metric(e::BasisVectors)
   )
 end
 
-function metric(e::AbstractArray{BasisVectors{T}}) where {T}
+function metric(e::AbstractArray{BasisVectors{T}};
+               ) where {T}
   res = Array{SVector{6,T}}(undef, size(e))
   @batch minbatch = 16 for i in eachindex(e, res)
     res[i] = metric(e[i])

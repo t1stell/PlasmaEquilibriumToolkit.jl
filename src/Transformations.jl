@@ -50,14 +50,14 @@ Compute the Jacobian of the covariant/contravariatn basis vectors `e` given by
 ``J = e₁ ⋅ e₂ × e₃`` (covariant) or ``J = 1/(e¹ ⋅ e² × e³)`` (contravariant).
 """
 function jacobian(::Covariant,
-                  e::BasisVectors;
-                 )
+                  e::BasisVectors{T};
+                 ) where {T}
 return dot(e[:,1],cross(e[:,2],e[:,3]))
 end
 
 function jacobian(::Contravariant,
-                  e::BasisVectors;
-                 )
+                  e::BasisVectors{T};
+                 ) where {T}
 return 1.0 /dot(e[:,1],cross(e[:,2],e[:,3]))
 end
 
@@ -111,15 +111,15 @@ function transform_basis(::CovariantFromContravariant,
 end
 
 function transform_basis(::ContravariantFromCovariant,
-                         e::BasisVectors;
-                        )
+                         e::BasisVectors{T};
+                        ) where {T}
   J = jacobian(Covariant(),e)
   return transform_basis(ContravariantFromCovariant(),e,J)
 end
 
 function transform_basis(::CovariantFromContravariant,
-                         e::BasisVectors;
-                        )
+                         e::BasisVectors{T};
+                        ) where {T}
   J = jacobian(Contravariant(),e)
   return transform_basis(CovariantFromContravariant(),e,J)
 end
@@ -137,8 +137,8 @@ function transform_basis(t::BasisTransformation,
 end
 
 function transform_basis(t::BasisTransformation,
-                         e::AbstractArray{BasisVectors};
-                        )
+                         e::AbstractArray{BasisVectors{T}};
+                        ) where {T}
   res = similar(e)
   @batch minbatch = 16 for i in eachindex(e, res)
     res[i] = transform_basis(t, e[i])
@@ -154,18 +154,18 @@ Perform a change of basis for magnetic coordinates denoted by the transformation
 """
 function transform_basis(t::Transformation,
                          x::C,
-                         e::BasisVectors,
+                         e::BasisVectors{T},
                          eq::E;
-                        ) where {C <: AbstractMagneticCoordinates,
+                        ) where {T, C <: AbstractMagneticCoordinates,
                                  E <: AbstractMagneticEquilibrium}
   throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typoeof(eq)) not yet impleented"))
 end
 
 function transform_basis(t::Transformation,
                          x::AbstractArray,
-                         e::AbstractArray{BasisVectors},
+                         e::AbstractArray{BasisVectors{T}},
                          eq::E,
-                        ) where {E <: AbstractMagneticEquilibrium}
+                        ) where {T, E <: AbstractMagneticEquilibrium}
   ndims(x) == ndims(e) && size(x) == size(e) ||
     throw(DimensionMismatch("Incompatible coordinate/basis vector arrays!"))
   res = similar(e)
