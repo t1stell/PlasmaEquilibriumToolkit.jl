@@ -5,7 +5,7 @@
     ι = 1.0 + rand(rng)
     @testset "B_norm" begin
         @test isapprox(B_norm(Contravariant(), B_vec), 0.9589876106776953)
-        @test_throws MethodError B_norm(Covariant(), B_vec)
+        @test_throws ArgumentError B_norm(Covariant(), B_vec)
         @test isapprox(B_norm(Covariant(), B_vec, ι), 7.47127616783484)
         @test B_norm(B_vec) == B_norm(Contravariant(), B_vec)
     end
@@ -21,7 +21,7 @@
                 ),
             ),
         )
-        @test_throws MethodError B_field(Covariant(), B_vec)
+        @test_throws ArgumentError B_field(Covariant(), B_vec)
         @test prod(
             isapprox(
                 B_field(Covariant(), B_vec, ι),
