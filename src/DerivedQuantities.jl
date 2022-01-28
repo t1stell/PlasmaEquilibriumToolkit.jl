@@ -324,7 +324,7 @@ See also: [`normalCurvature`](@ref), [`geodesicCurvature`](@ref)
 function curvature_components(∇X::BasisVectors{T},
                               ∇B::CoordinateVector{T},
                              ) where {T}
-  B = cross(contravariantBasis[:, 1], contravariantBasis[:, 2])
+  B = cross(∇X[:, 1], ∇X[:, 2])
   return normalCurvature(B, ∇B, ∇X[:, 1], ∇X[:, 2]),
          geodesicCurvature(B, ∇B,∇X[:, 1])
 end
@@ -345,7 +345,6 @@ end
 """
     metric2(e::BasisVectors)
 
-Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g112 = `e[:,1]*e[:,2]`,…]
 Computes the metric tensor components `gᵘᵛ` or `gᵤᵥ` for a set of basis vectors `e` in a 6 element SVector: [g11 = `e[:,1]*e[:,1]`, g12 = `e[:,1]*e[:,2]`,…]
 """
 function metric(e::BasisVectors{T},
