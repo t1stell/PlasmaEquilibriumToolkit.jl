@@ -325,8 +325,8 @@ function curvature_components(∇X::BasisVectors{T},
                               ∇B::CoordinateVector{T},
                              ) where {T}
   B = cross(∇X[:, 1], ∇X[:, 2])
-  return normalCurvature(B, ∇B, ∇X[:, 1], ∇X[:, 2]),
-         geodesicCurvature(B, ∇B,∇X[:, 1])
+  return normal_curvature(B, ∇B, ∇X[:, 1], ∇X[:, 2]),
+         geodesic_curvature(B, ∇B,∇X[:, 1])
 end
 
 function curvature_components(∇X::AbstractArray{BasisVectors{T}},
