@@ -285,7 +285,7 @@ function grad_B_projection(e::BasisVectors{T},
 end
 
 """
-    normalCurvature(B::CoordinateVector,∇B::CoordinateVector,∇X::CoordinateVector,∇Y::CoordinateVector)
+    normal_curvature(B::CoordinateVector,∇B::CoordinateVector,∇X::CoordinateVector,∇Y::CoordinateVector)
 
 Computes the normal curvature component defined in straight fieldline coordinates (X,Y,Z) with basis vectors defined
 by (∇X,∇Y,∇Z) with the relation κₙ = (B × ∇B) ⋅ ((∇X⋅∇X)∇Y - (∇X⋅∇Y)∇X)/(B³|∇X|)
@@ -319,7 +319,7 @@ end
 Computes the normal and geodesic curvature vectors for a stright field line coordinate system with basis vectors
 ∇X = `e[:,1]` and ∇Y = `e[:,2]`.
 
-See also: [`normalCurvature`](@ref), [`geodesicCurvature`](@ref)
+See also: [`normal_curvature`](@ref), [`geodesic_curvature`](@ref)
 """
 function curvature_components(∇X::BasisVectors{T},
                               ∇B::CoordinateVector{T},
@@ -332,7 +332,7 @@ end
 function curvature_components(∇X::AbstractArray{BasisVectors{T}},
                               ∇B::AbstractArray{CoordinateVector{T}},
                              ) where {T}
-  size(contravariantBasis) == size(∇B) || throw(
+  size(∇X) == size(∇B) || throw(
     DimensionMismatch("Basis vectors and ∇B arrays must have the same size"),
   )
   res = Array{NTuple{2,T}}(undef, size(∇B))
