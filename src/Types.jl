@@ -1,10 +1,37 @@
 
 """
-    AbstractMagneticEquilibrium
+    AbstractGeometry
 
-Abstract supertype for different magnetic equilibrium representations (VMEC, SPEC,...).
+Abstract supertype for different geometries.
 """
-abstract type AbstractMagneticEquilibrium end;
+abstract type AbstractGeometry end;
+
+
+"""
+    AbstractMagneticGeometry
+
+Abstract subtype of AbstractGeometry for different geometries including magnetic structures
+"""
+abstract type AbstractMagneticGeometry <: AbstractGeometry end;
+
+"""
+   MagneticGeometry
+
+Subtype of AbstractMagneticGeometry. Possibly should be a struct with some 
+general features of magnetic geometry (like field information)  
+Right now it is empty
+"""
+abstract type MagneticGeometry <: AbstractMagneticGeometry end;
+
+
+"""
+    AbstractMagneticGeometry
+
+Abstract subtype of AbstractMagneticGeometry for different equilibria representations (VMEC, SPEC...)
+
+This layer of abstraction is probably not necessary
+"""
+abstract type AbstractMagneticEquilibrium <: AbstractMagneticGeometry end;
 
 """
     AbstractMagneticCoordinates
@@ -12,6 +39,22 @@ abstract type AbstractMagneticEquilibrium end;
 Abstract supertype for different magnetic coordinates.
 """
 abstract type AbstractMagneticCoordinates end;
+
+"""
+   AbstractSurface
+
+Abstract subtype of AbstractGeometry for a surface, not necessarily a magnetic surface
+"""
+abstract type AbstractSurface <: AbstractGeometry end;
+
+
+"""
+   AbstractMagneticSurface
+
+Abstract subtype of AbstracSurface.  These are magnetic surfaces generally 
+derived from equilibria of different types
+"""
+abstract type AbstractMagneticSurface <: AbstractSurface end;
 
 """
     NullEquilibrium()
@@ -77,15 +120,13 @@ abstract type BasisType end
 struct Covariant <: BasisType end
 struct Contravariant <: BasisType end
 
-abstract type AbstractMagneticGeometry end;
-abstract type MagneticGeometry <: AbstractMagneticGeometry end;
 
-struct AbstractMagneticSurface <: AbstractMagneticGeometry
+struct MagneticSurface <: AbstractMagneticSurface
   eqType::Type
   surfaceLabel::AbstractFloat
 end
 
-struct AbstractMagneticFieldline <: AbstractMagneticGeometry
+struct MagneticFieldline <: AbstractMagneticSurface
   eqType::Type
   surfaceLabel::Float64
   fieldlineLabel::Float64
