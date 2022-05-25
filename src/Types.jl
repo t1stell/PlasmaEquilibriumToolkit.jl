@@ -45,6 +45,32 @@ true
 """
 const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where {T}
 
+"""
+    FourierData{T} where T <: AbstractFloat
+
+Composite type representation for a single set of `cos` and `sin` coefficients and
+deriatives  w.r.t `s` for a given poloidal and toroidal mode number
+
+# Fields
+- `m::T` : Poloidal mode number
+- `n::T` : Toroidal mode number multiplied by number of field periods
+- `cos::T` : The cosine coefficient
+- `sin::T` : The sine coefficient
+- `dcosds::T` : Derivative of the cosine coefficient w.r.t. `s`
+- `dsinds::T` : Derivative of the sine coefficient w.r.t. `s`
+"""
+struct FourierData{T}
+  m::T
+  n::T
+  cos::T
+  sin::T
+  dcos_ds::T
+  dsin_ds::T
+end
+
+const FourierArray{T} = StructArray{FourierData{T}} where T
+
+
 abstract type BasisType end
 
 #Define the singleton types
