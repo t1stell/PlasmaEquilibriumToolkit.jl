@@ -22,6 +22,9 @@ export inverseTransform, cosineTransform, sineTransform
 # Magnetic coordinate concretizations
 export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 
+# Surfaces
+export FourierSurface
+
 # Magnetic coordinate transformations
 export FluxFromPest, FluxFromBoozer, FluxFromClebsch
 export PestFromFlux, PestFromBoozer, PestFromClebsch

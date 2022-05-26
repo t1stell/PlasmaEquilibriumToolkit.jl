@@ -113,6 +113,12 @@ end
 
 const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
 
+struct FourierSurface{T} <: AbstractSurface
+  rmn::SurfaceFourierArray{T}
+  zmn::SurfaceFourierArray{T}
+  s::T
+end
+  
 
 abstract type BasisType end
 
