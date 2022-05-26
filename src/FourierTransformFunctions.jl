@@ -1,16 +1,16 @@
-function inverseKernel(θ::A,ζ::A,v::FourierData{T}) where {A, T}
+function inverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
   return v.cos*cos(v.m*θ-v.n*ζ) + v.sin*sin(v.m*θ-v.n*ζ)
 end
 
-function dsInverseKernel(θ::A,ζ::A,v::FourierData{T}) where {A, T}
+function dsInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
   return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
 end
 
-function dθInverseKernel(θ::A,ζ::A,v::FourierData{T}) where {A, T}
+function dθInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
   return v.m*(v.sin*cos(v.m*θ-v.n*ζ) - v.cos*sin(v.m*θ-v.n*ζ))
 end
 
-function dζInverseKernel(θ::A,ζ::A,v::FourierData{T}) where {A, T}
+function dζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
   return v.n*(v.cos*sin(v.m*θ-v.n*ζ) - v.sin*cos(v.m*θ-v.n*ζ))
 end
 
@@ -36,7 +36,7 @@ function sineTransform(m::Int,n::Int,x::AbstractArray{C},A::AbstractArray) where
 end
 
 """
-    inverseTransform(x::AbstractMagneticCoordinates,data::FourierData{T};deriv::Symbol=:none)
+    inverseTransform(x::AbstractMagneticCoordinates,data::SurfaceFourierData{T};deriv::Symbol=:none)
 
 Compute the inverse Fourier transform of VMEC spectral data with coefficients
 defined in `data` at the points defined by the AbstractMagneticCoordinates `x`.
@@ -45,7 +45,7 @@ The inverse transform of the derivative of `data` can be specified as `:none`,`:
 # Examples
 """
 function inverseTransform(x::C,
-                          data::AbstractVector{FourierData{T}};
+                          data::AbstractVector{SurfaceFourierData{T}};
                           deriv::Symbol=:none,
                          ) where {T, C <: AbstractMagneticCoordinates}
   res = Array{T,1}(undef, length(data))
@@ -57,7 +57,7 @@ function inverseTransform(x::C,
 end
 
 function inverseTransform(x::AbstractArray{C},
-                          data::AbstractVector{FourierData{T}};
+                          data::AbstractVector{SurfaceFourierData{T}};
                           deriv::Symbol=:none,
                          ) where {T, C <: AbstractMagneticCoordinates}
   res = Array{T}(undef, size(x))
@@ -67,7 +67,7 @@ end
 
 function inverseTransform!(res::AbstractArray{T},
                            x::AbstractArray{C},
-                           data::AbstractVector{FourierData{T}};
+                           data::AbstractVector{SurfaceFourierData{T}};
                            deriv::Symbol=:none,
                           ) where {T, C <: AbstractMagneticCoordinates}
   size(res) == size(x) || throw(DimensionMismatch("Incompatible coordinate and results arrays in inverseTransform"))

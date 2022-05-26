@@ -46,7 +46,7 @@ true
 const BasisVectors{T} = SArray{Tuple{3,3},T,2,9} where {T}
 
 """
-    FourierData{T} where T <: AbstractFloat
+    SurfaceFourierData{T} where T <: AbstractFloat
 
 Composite type representation for a single set of `cos` and `sin` coefficients and
 deriatives  w.r.t `s` for a given poloidal and toroidal mode number
@@ -59,7 +59,7 @@ deriatives  w.r.t `s` for a given poloidal and toroidal mode number
 - `dcosds::T` : Derivative of the cosine coefficient w.r.t. `s`
 - `dsinds::T` : Derivative of the sine coefficient w.r.t. `s`
 """
-struct FourierData{T}
+struct SurfaceFourierData{T}
   m::T
   n::T
   cos::T
@@ -68,7 +68,7 @@ struct FourierData{T}
   dsin_ds::T
 end
 
-const FourierArray{T} = StructArray{FourierData{T}} where T
+const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
 
 
 abstract type BasisType end

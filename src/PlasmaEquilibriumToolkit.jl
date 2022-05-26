@@ -16,7 +16,7 @@ export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
 
 # Fourier Series
-export FourierData, FourierArray
+export SurfaceFourierData, SurfaceFourierArray
 export inverseTransform, cosineTransform, sineTransform
 
 # Magnetic coordinate concretizations
