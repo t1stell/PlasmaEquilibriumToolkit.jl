@@ -15,6 +15,10 @@ export AbstractMagneticSurface, MagneticSurface
 export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
 
+# Fourier Series
+export SurfaceFourierData, SurfaceFourierArray
+export inverseTransform, cosineTransform, sineTransform
+
 # Magnetic coordinate concretizations
 export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 
@@ -41,10 +45,12 @@ export grad_B, B_norm, B_field
 
 
 include("Types.jl")
+include("FourierTransformFunctions.jl")
 include("MagneticCoordinates.jl")
 include("MagneticCoordinateGrid.jl")
 include("Transformations.jl")
 include("DerivedQuantities.jl")
+
 
 # Specialzed coordinate defintions, transformations, routines for different codes
 include("Specializations.jl")
