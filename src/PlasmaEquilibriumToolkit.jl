@@ -16,7 +16,7 @@ export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
 
 # Fourier Series
-export SurfaceFourierData, SurfaceFourierArray
+export SurfaceFourierData, SurfaceFourierArray, FourierCoordinates
 export inverseTransform, cosineTransform, sineTransform
 
 # Magnetic coordinate concretizations
@@ -31,11 +31,12 @@ export PestFromFlux, PestFromBoozer, PestFromClebsch
 export BoozerFromFlux, BoozerFromPest, BoozerFromClebsch
 export CylindricalFromFlux, CylindricalFromPest, CylindricalFromBoozer
 export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
+export CylindricalFromFourier
 
 # Basis vector quantities
 export BasisTransformation, BasisTypes, Covariant, Contravariant
 export CoordinateVector, BasisVectors
-export basis_vectors
+export basis_vectors, transform_deriv
 
 # Change of basis quantities
 export CovariantFromContravariant, ContravariantFromCovariant
@@ -53,6 +54,7 @@ include("MagneticCoordinates.jl")
 include("MagneticCoordinateGrid.jl")
 include("Transformations.jl")
 include("DerivedQuantities.jl")
+include("Surfaces.jl")
 
 
 # Specialzed coordinate defintions, transformations, routines for different codes

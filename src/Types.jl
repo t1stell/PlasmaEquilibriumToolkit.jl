@@ -70,6 +70,28 @@ Convenience type for defining a 3-element StaticVector.
 const CoordinateVector{T} = SVector{3,T} where {T}
 
 """
+    FourierCoordinates{T,A}(s::T, θ::A, ζ::A)
+
+Coordinates on a surface. These are identical to the coordinates on a magnetic
+These are identical to magnetic flux-surface coordinates.  `s` represents a 
+surface label and is some degree arbitrary unless the surface is part of a 
+magnetic equilibrium.  `θ` and `ζ` are poloidal and toroidal angle-like
+coordinates respectively
+
+"""
+struct FourierCoordinates{T <: Real, A <: Real} <: AbstractMagneticCoordinates
+  s::T
+  θ::A
+  ζ::A
+  FourierCoordinates{T,A}(s::T,θ::A,ζ::A) where {T,A} = new(s,θ,ζ)
+end
+
+function FourierCoordinates(s,θ,ζ)
+  s2, θ2, ζ2 = promote(s, θ, ζ)
+  return FourierCoordinates{typeof(s2),typeof(θ2)}(s2, θ2, ζ2)
+end
+
+"""
     BasisVectors{T} <: SArray{Tuple{3,3},T,2,9}
 
 Convenience type for defining the Cartesian coordinate representation of 3D curvilinear vector fields.
