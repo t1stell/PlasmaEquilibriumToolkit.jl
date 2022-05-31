@@ -160,6 +160,18 @@ struct MagneticFieldline <: AbstractMagneticSurface
   fieldlineLabel::Float64
   toroidalAngle::Float64
 end
+
+const BoundaryCondition = Interpolations.BoundaryCondition
+struct BField{T, C <: AbstractMagneticCoordinates, N, B <: BoundaryCondition}
+    nfp::Integer
+    coords::StructArray{C{T, T}}
+    field_data::NTuple{3, Interpolations.Extrapolation}
+end
+
+function Base.size(bfield::BField{T, C, B}) where {T, C <: AbstractMagneticCoordinates, B <: BoundaryCondition}
+    return size(bfield.coords)
+end
+
 #=
 struct MagneticSurface <: MagneticGeometry
   eq::MagneticEquilibrium
