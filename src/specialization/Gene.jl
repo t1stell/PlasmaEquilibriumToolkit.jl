@@ -1,8 +1,19 @@
 using Printf
-export GeneFromPest, GeneFromFlux, geneGeometryCoefficients
+export GeneFromPest, GeneFromFlux, geneGeometryCoefficients, GeneCoordinates
 
 struct GeneFromPest <: Transformation; end
 struct GeneFromFlux <: Transformation; end
+
+struct GeneCoordinates{T, A}
+    x::T
+    y::A
+    z::A
+end
+
+function GeneCoordinates(x, y, z)
+    x2, y2, z2 = promote(x, y, z)
+    return GeneCoordinates{typeof(x2),typeof(y2)}(x2, y2, z2)
+end
 
 function writeGeneGeometry(filename::String,coords,eq::ME,
                            g::AbstractVector{SVector{6,Float64}},
