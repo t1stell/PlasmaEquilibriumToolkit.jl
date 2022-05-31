@@ -5,6 +5,7 @@ using StaticArrays
 using StructArrays
 using LabelledArrays
 using CoordinateTransformations
+using Interpolations
 using Polyester
 
 # Export statements
