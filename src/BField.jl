@@ -14,17 +14,29 @@ function vector2range(v::AbstractVector)
   end
 end
 
-function BField(coords::StructArray{Cylindrical{T, A}},
-                field_data_x::AbstractArray{T, 3},
-                field_data_y::AbstractArray{T, 3},
-                field_data_z::AbstractArray{T, 3};
-                bc::BoundaryCondition = Periodic,
-                nfp::Int = 1,
-               ) where {T, A}
+function coordinate_grid(::Type{Cylindrical},
+                         r::AbstractVector{T1},
+                         θ::AbstractVector{T2},
+                         z::AbstractVector{T3};
+                        ) where {T1, T2, T3}
+    full_size = (length(r), length(θ), length(z))
+    r_grid = reshape(repeat(r, outer=length(θ)*length(z)), full_size)
+    θ_grid = reshape(repeat(θ, inner=length(r), outer=length(z)), full_size)
+    z_grid = reshape(repeat(z, inner=length(r)*length(θ)), full_size)
+    return StructArray{Cylindrical}((r_grid, θ_grid, z_grid))
+end
+
+function BField(coords::StructArray{Cylindrical},
+                field_data_x::AbstractArray{T},
+                field_data_y::AbstractArray{T},
+                field_data_z::AbstractArray{T};
+                bc = Periodic,
+                nfp = 1,
+               ) where {T}
     size(field_data_x) == size(field_data_y) == size(field_data_z) == size(coords) || throw(DimensionMismatch("Incompatible arrays sizes"))
-    knots_dim_1 = coords[:, 1, 1]
-    knots_dim_2 = coords[1, :, 1]
-    knots_dim_3 = coords[1, 1, :]
+    knots_dim_1 = getproperty(coords[:, 1, 1], 1)
+    knots_dim_2 = getproperty(coords[1, :, 1], 2)
+    knots_dim_3 = getproperty(coords[1, 1, :], 3)
 
     knots = (vector2range(knots_dim_1), vector2range(knots_dim_2), vector2range(knots_dim_3))
 
@@ -32,7 +44,7 @@ function BField(coords::StructArray{Cylindrical{T, A}},
     itp_y = CubicSplineInterpolation(knots, field_data_y; bc = bc(OnGrid()))
     itp_z = CubicSplineInterpolation(knots, field_data_z; bc = bc(OnGrid()))
 
-    return BField{T, Cylindrical, bc}(nfp, coords, (itp_x, itp_y, itp_z))
+    return BField{T, Cylindrical}(nfp, coords, (itp_x, itp_y, itp_z))
 end
 
 function BField(coords::StructArray{Cylindrical{T, A}},
@@ -51,20 +63,20 @@ function BField(coords::StructArray{Cylindrical{T, A}},
     return BField(coords, field_data_x, field_data_y, field_data_z; bc = bc, nfp = nfp)
 end
 
-function (bfield::BField{F, C, B})(x::T,
+function (bfield::BField{F, C})(x::T,
                                    y::T,
                                    z::T;
-                                  ) where {T, F, C <: Cartesian, B}
+                                  ) where {T, F, C}
     Bx = bfield.field_data[1](x, y, z)
     By = bfield.field_data[2](x, y, z)
     Bz = bfield.field_data[3](x, y, z)
     return (Bx, By, Bz)
 end
 
-function (bfield::BField{F, C, B})(r::T,
+function (bfield::BField{F, C})(r::T,
                                    z::T,
                                    ϕ::T;
-                                  ) where {F, T, C <: Cylindrical, B <: Periodic}
+                                  ) where {F, T, C <: Cylindrical}
     ϕ = mod(ϕ, 2*π/bfield.nfp)
     Br = bfield.field_data[1](r,z,ϕ)
     Bz = bfield.field_data[2](r,z,ϕ)
