@@ -164,7 +164,7 @@ end
 const BoundaryCondition = Interpolations.BoundaryCondition
 struct BField{T, C <: AbstractMagneticCoordinates, N, B <: BoundaryCondition}
     nfp::Integer
-    coords::StructArray{C{T, T}}
+    coords::StructArray{C}
     field_data::NTuple{3, Interpolations.Extrapolation}
 end
 
