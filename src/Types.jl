@@ -162,13 +162,13 @@ struct MagneticFieldline <: AbstractMagneticSurface
 end
 
 const BoundaryCondition = Interpolations.BoundaryCondition
-struct BField{T, C <: AbstractMagneticCoordinates, N, B <: BoundaryCondition}
+struct BField{T, C}
     nfp::Integer
-    coords::StructArray{C}
+    coords::StructArray
     field_data::NTuple{3, Interpolations.Extrapolation}
 end
 
-function Base.size(bfield::BField{T, C, B}) where {T, C <: AbstractMagneticCoordinates, B <: BoundaryCondition}
+function Base.size(bfield::BField{T, C}) where {T, C <: AbstractMagneticCoordinates}
     return size(bfield.coords)
 end
 
