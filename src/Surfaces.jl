@@ -1,7 +1,7 @@
-function transform_deriv(::CylindricalFromFourier, 
-                         x::FourierCoordinates,
-                         surf::FourierSurface;
-                         )
+function CoordinateTransformations.transform_deriv(::CylindricalFromFourier, 
+			 x::FourierCoordinates{T, T},
+			 surf::FourierSurface{T};
+		        ) where {T}
   dRds = inverseTransform(x, surf.rmn; deriv=:ds)
   dZds = inverseTransform(x, surf.zmn; deriv=:ds)
   dϕds = zero(typeof(x.θ))
