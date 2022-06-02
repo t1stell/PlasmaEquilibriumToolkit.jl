@@ -12,16 +12,17 @@
   r_grid = reshape(repeat(r,outer=length(z)*length(θ)),fullSize)
   z_grid = reshape(repeat(z,inner=length(r),outer=length(θ)),fullSize)
   θ_grid = reshape(repeat(θ,inner=length(z)*length(r)),fullSize)
-  coords = StructArray{Cylindrical}((r_grid, z_grid, θ_grid))
+  Bf_coords = StructArray{Cylindrical}((r_grid, z_grid, θ_grid))
   Br = zeros(size(r_grid))
   Bz = zeros(size(r_grid))
   Bθ = reshape(repeat(10.0./r,outer=length(z)*length(θ)),fullSize)
-  testfield = PlasmaEquilibriumToolkit.BField(coords, Br, Bz, Bθ, nfp=3)
+  testfield = PlasmaEquilibriumToolkit.BField(Bf_coords, Br, Bz, Bθ, nfp=3)
   @testset "Load Bfield" begin
     @test size(testfield.coords.r) == fullSize
     @test length(testfield.field_data) == 3
     @test isapprox(testfield(10.0,0.0,0.0)[3],1.0,rtol=rtol)
     @test isapprox(testfield(10.0,0.0,Float64(π))[3],1.0,rtol=rtol)
+    @test isapprox(testfield(10.05,0.0,0.0)[3],0.9950250669743587,rtol=rtol)
   end
 end
 
