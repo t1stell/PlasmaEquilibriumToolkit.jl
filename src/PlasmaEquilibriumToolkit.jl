@@ -15,6 +15,7 @@ export AbstractMagneticEquilibrium, NullEquilibrium
 export AbstractMagneticSurface, MagneticSurface
 export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
+export AbstractMagneticField, MagneticField
 
 # Fourier Series
 export SurfaceFourierData, SurfaceFourierArray, FourierCoordinates

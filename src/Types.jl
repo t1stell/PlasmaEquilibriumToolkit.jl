@@ -1,5 +1,12 @@
 
 """
+    AbstractMagneticField
+
+Abstract supertype for different magnetic field representations
+"""
+abstract type AbstractMagneticField end;
+
+"""
     AbstractGeometry
 
 Abstract supertype for different geometries.
@@ -162,7 +169,7 @@ struct MagneticFieldline <: AbstractMagneticSurface
 end
 
 const BoundaryCondition = Interpolations.BoundaryCondition
-struct MagneticField{T, C}
+struct MagneticField{T, C} <: AbstractMagneticField
     nfp::Integer
     coords::StructArray
     field_data::NTuple{3, Interpolations.Extrapolation}
