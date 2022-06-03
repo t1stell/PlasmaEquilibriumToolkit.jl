@@ -13,6 +13,7 @@ struct CartesianFromFlux <: Transformation end
 struct CartesianFromPest <: Transformation end
 struct ContravariantFromCovariant <: BasisTransformation end
 struct CovariantFromContravariant <: BasisTransformation end
+struct CylindricalFromFourier <: Transformation end
 
 
 """

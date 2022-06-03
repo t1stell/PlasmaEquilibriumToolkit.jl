@@ -5,6 +5,7 @@ using StaticArrays
 using StructArrays
 using LabelledArrays
 using CoordinateTransformations
+using Interpolations
 using Polyester
 
 # Export statements
@@ -14,13 +15,17 @@ export AbstractMagneticEquilibrium, NullEquilibrium
 export AbstractMagneticSurface, MagneticSurface
 export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
+export AbstractMagneticField, MagneticField
 
 # Fourier Series
-export SurfaceFourierData, SurfaceFourierArray
+export SurfaceFourierData, SurfaceFourierArray, FourierCoordinates
 export inverseTransform, cosineTransform, sineTransform
 
 # Magnetic coordinate concretizations
 export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
+
+# Surfaces
+export FourierSurface
 
 # Magnetic coordinate transformations
 export FluxFromPest, FluxFromBoozer, FluxFromClebsch
@@ -28,6 +33,7 @@ export PestFromFlux, PestFromBoozer, PestFromClebsch
 export BoozerFromFlux, BoozerFromPest, BoozerFromClebsch
 export CylindricalFromFlux, CylindricalFromPest, CylindricalFromBoozer
 export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
+export CylindricalFromFourier
 
 # Basis vector quantities
 export BasisTransformation, BasisTypes, Covariant, Contravariant
@@ -50,6 +56,9 @@ include("MagneticCoordinates.jl")
 include("MagneticCoordinateGrid.jl")
 include("Transformations.jl")
 include("DerivedQuantities.jl")
+include("Surfaces.jl")
+include("MagneticField.jl")
+
 
 
 # Specialzed coordinate defintions, transformations, routines for different codes

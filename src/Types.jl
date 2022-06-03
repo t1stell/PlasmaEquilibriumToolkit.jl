@@ -1,10 +1,44 @@
 
 """
-    AbstractMagneticEquilibrium
+    AbstractMagneticField
 
-Abstract supertype for different magnetic equilibrium representations (VMEC, SPEC,...).
+Abstract supertype for different magnetic field representations
 """
-abstract type AbstractMagneticEquilibrium end;
+abstract type AbstractMagneticField end;
+
+"""
+    AbstractGeometry
+
+Abstract supertype for different geometries.
+"""
+abstract type AbstractGeometry end;
+
+
+"""
+    AbstractMagneticGeometry
+
+Abstract subtype of AbstractGeometry for different geometries including magnetic structures
+"""
+abstract type AbstractMagneticGeometry <: AbstractGeometry end;
+
+"""
+   MagneticGeometry
+
+Subtype of AbstractMagneticGeometry. Possibly should be a struct with some 
+general features of magnetic geometry (like field information)  
+Right now it is empty
+"""
+abstract type MagneticGeometry <: AbstractMagneticGeometry end;
+
+
+"""
+    AbstractMagneticGeometry
+
+Abstract subtype of AbstractMagneticGeometry for different equilibria representations (VMEC, SPEC...)
+
+This layer of abstraction is probably not necessary
+"""
+abstract type AbstractMagneticEquilibrium <: AbstractMagneticGeometry end;
 
 """
     AbstractMagneticCoordinates
@@ -12,6 +46,22 @@ abstract type AbstractMagneticEquilibrium end;
 Abstract supertype for different magnetic coordinates.
 """
 abstract type AbstractMagneticCoordinates end;
+
+"""
+   AbstractSurface
+
+Abstract subtype of AbstractGeometry for a surface, not necessarily a magnetic surface
+"""
+abstract type AbstractSurface <: AbstractGeometry end;
+
+
+"""
+   AbstractMagneticSurface
+
+Abstract subtype of AbstracSurface.  These are magnetic surfaces generally 
+derived from equilibria of different types
+"""
+abstract type AbstractMagneticSurface <: AbstractSurface end;
 
 """
     NullEquilibrium()
@@ -25,6 +75,28 @@ struct NullEquilibrium <: AbstractMagneticEquilibrium end
 Convenience type for defining a 3-element StaticVector.
 """
 const CoordinateVector{T} = SVector{3,T} where {T}
+
+"""
+    FourierCoordinates{T,A}(s::T, θ::A, ζ::A)
+
+Coordinates on a surface. These are identical to the coordinates on a magnetic
+These are identical to magnetic flux-surface coordinates.  `s` represents a 
+surface label and is some degree arbitrary unless the surface is part of a 
+magnetic equilibrium.  `θ` and `ζ` are poloidal and toroidal angle-like
+coordinates respectively
+
+"""
+struct FourierCoordinates{T <: Real, A <: Real} <: AbstractMagneticCoordinates
+  s::T
+  θ::A
+  ζ::A
+  FourierCoordinates{T,A}(s::T,θ::A,ζ::A) where {T,A} = new(s,θ,ζ)
+end
+
+function FourierCoordinates(s,θ,ζ)
+  s2, θ2, ζ2 = promote(s, θ, ζ)
+  return FourierCoordinates{typeof(s2),typeof(θ2)}(s2, θ2, ζ2)
+end
 
 """
     BasisVectors{T} <: SArray{Tuple{3,3},T,2,9}
@@ -70,6 +142,12 @@ end
 
 const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
 
+struct FourierSurface{T} <: AbstractSurface
+  rmn::SurfaceFourierArray{T}
+  zmn::SurfaceFourierArray{T}
+  s::T
+end
+  
 
 abstract type BasisType end
 
@@ -77,20 +155,30 @@ abstract type BasisType end
 struct Covariant <: BasisType end
 struct Contravariant <: BasisType end
 
-abstract type AbstractMagneticGeometry end;
-abstract type MagneticGeometry <: AbstractMagneticGeometry end;
 
-struct AbstractMagneticSurface <: AbstractMagneticGeometry
+struct MagneticSurface <: AbstractMagneticSurface
   eqType::Type
   surfaceLabel::AbstractFloat
 end
 
-struct AbstractMagneticFieldline <: AbstractMagneticGeometry
+struct MagneticFieldline <: AbstractMagneticSurface
   eqType::Type
   surfaceLabel::Float64
   fieldlineLabel::Float64
   toroidalAngle::Float64
 end
+
+const BoundaryCondition = Interpolations.BoundaryCondition
+struct MagneticField{T, C} <: AbstractMagneticField
+    nfp::Integer
+    coords::StructArray
+    field_data::NTuple{3, Interpolations.Extrapolation}
+end
+
+function Base.size(magnetic_field::MagneticField{T, C}) where {T, C <: AbstractMagneticCoordinates}
+    return size(magnetic_field.coords)
+end
+
 #=
 struct MagneticSurface <: MagneticGeometry
   eq::MagneticEquilibrium
