@@ -1,4 +1,4 @@
-@testset "PlasmaEquilibriumToolkit Bfield tests " begin
+@testset "PlasmaEquilibriumToolkit magnetic_field tests " begin
   #generate a simple toroidal solenoidal field
   nr = 21
   nz = 26
@@ -16,8 +16,8 @@
   Br = zeros(size(r_grid))
   Bz = zeros(size(r_grid))
   Bθ = reshape(repeat(10.0./r,outer=length(z)*length(θ)),fullSize)
-  testfield = PlasmaEquilibriumToolkit.BField(Bf_coords, Br, Bz, Bθ, nfp=3)
-  @testset "Load Bfield" begin
+  testfield = PlasmaEquilibriumToolkit.MagneticField(Bf_coords, Br, Bz, Bθ, nfp=3)
+  @testset "Load MagneticField" begin
     @test size(testfield.coords.r) == fullSize
     @test length(testfield.field_data) == 3
     @test isapprox(testfield(10.0,0.0,0.0)[3],1.0,rtol=rtol)

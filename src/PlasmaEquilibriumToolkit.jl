@@ -56,7 +56,7 @@ include("MagneticCoordinateGrid.jl")
 include("Transformations.jl")
 include("DerivedQuantities.jl")
 include("Surfaces.jl")
-include("BField.jl")
+include("MagneticField.jl")
 
 
 
