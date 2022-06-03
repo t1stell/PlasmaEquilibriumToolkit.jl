@@ -27,24 +27,29 @@ function coordinate_grid(::Type{Cylindrical},
 end
 
 function BField(coords::StructArray{Cylindrical},
-                field_data_x::AbstractArray{T},
-                field_data_y::AbstractArray{T},
-                field_data_z::AbstractArray{T};
+                field_data_r::AbstractArray{T},
+                field_data_z::AbstractArray{T},
+                field_data_ϕ::AbstractArray{T};
                 bc = Periodic,
                 nfp = 1,
                ) where {T}
-    size(field_data_x) == size(field_data_y) == size(field_data_z) == size(coords) || throw(DimensionMismatch("Incompatible arrays sizes"))
+    size(field_data_r) == size(field_data_z) == size(field_data_ϕ) == size(coords) || throw(DimensionMismatch("Incompatible arrays sizes"))
     knots_dim_1 = getproperty(coords[:, 1, 1], 1)
     knots_dim_2 = getproperty(coords[1, :, 1], 2)
     knots_dim_3 = getproperty(coords[1, 1, :], 3)
 
     knots = (vector2range(knots_dim_1), vector2range(knots_dim_2), vector2range(knots_dim_3))
+    itp_types = (BSpline(Cubic(Free(OnGrid()))),
+                 BSpline(Cubic(Free(OnGrid()))),
+                 BSpline(Cubic(Periodic(OnCell()))))
+    itp = (f) -> scale(interpolate(f, itp_types), knots...)
+    extp = (f) -> extrapolate(itp(f), (Throw(), Throw(), Periodic()))
 
-    itp_x = CubicSplineInterpolation(knots, field_data_x; bc = bc(OnGrid()))
-    itp_y = CubicSplineInterpolation(knots, field_data_y; bc = bc(OnGrid()))
-    itp_z = CubicSplineInterpolation(knots, field_data_z; bc = bc(OnGrid()))
+    Br = extp(field_data_r)
+    Bz = extp(field_data_z)
+    Bϕ = extp(field_data_ϕ)
 
-    return BField{T, Cylindrical}(nfp, coords, (itp_x, itp_y, itp_z))
+    return BField{T, Cylindrical}(nfp, coords, (Br, Bz, Bϕ))
 end
 
 function BField(coords::StructArray{Cylindrical{T, A}},
@@ -64,9 +69,9 @@ function BField(coords::StructArray{Cylindrical{T, A}},
 end
 
 function (bfield::BField{F, C})(x::T,
-                                   y::T,
-                                   z::T;
-                                  ) where {T, F, C}
+                                y::T,
+                                z::T;
+                               ) where {T, F, C}
     Bx = bfield.field_data[1](x, y, z)
     By = bfield.field_data[2](x, y, z)
     Bz = bfield.field_data[3](x, y, z)
@@ -74,9 +79,9 @@ function (bfield::BField{F, C})(x::T,
 end
 
 function (bfield::BField{F, C})(r::T,
-                                   z::T,
-                                   ϕ::T;
-                                  ) where {F, T, C <: Cylindrical}
+                                z::T,
+                                ϕ::T;
+                               ) where {F, T, C <: Cylindrical}
     ϕ = mod(ϕ, 2*π/bfield.nfp)
     Br = bfield.field_data[1](r,z,ϕ)
     Bz = bfield.field_data[2](r,z,ϕ)
