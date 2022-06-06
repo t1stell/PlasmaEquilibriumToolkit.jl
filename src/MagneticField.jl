@@ -49,7 +49,40 @@ function MagneticField(coords::StructArray{Cylindrical},
     Bz = extp(field_data_z)
     Bϕ = extp(field_data_ϕ)
 
-    return MagneticField{T, Cylindrical}(nfp, coords, (Br, Bz, Bϕ))
+    return MagneticField{T, Cylindrical, Nothing}(nfp, coords, (Br, Bz, Bϕ), nothing)
+end
+
+function MagneticField(coords::StructArray{Cylindrical},
+                        field_data_r::AbstractArray{T},
+                        field_data_z::AbstractArray{T},
+                        field_data_ϕ::AbstractArray{T},
+                        potential_data_r::AbstractArray{T},
+                        potential_data_z::AbstractArray{T},
+                        potential_data_ϕ::AbstractArray{T};
+                        bc = Periodic,
+                        nfp = 1,
+                        ) where {T}
+    size(field_data_r) == size(field_data_z) == size(field_data_ϕ) == size(coords) || throw(DimensionMismatch("Incompatible arrays sizes"))
+    knots_dim_1 = getproperty(coords[:, 1, 1], 1)
+    knots_dim_2 = getproperty(coords[1, :, 1], 2)
+    knots_dim_3 = getproperty(coords[1, 1, :], 3)
+
+    knots = (vector2range(knots_dim_1), vector2range(knots_dim_2), vector2range(knots_dim_3))
+    itp_types = (BSpline(Cubic(Free(OnGrid()))),
+                 BSpline(Cubic(Free(OnGrid()))),
+                 BSpline(Cubic(Periodic(OnCell()))))
+    itp = (f) -> scale(interpolate(f, itp_types), knots...)
+    extp = (f) -> extrapolate(itp(f), (Throw(), Throw(), Periodic()))
+
+    Br = extp(field_data_r)
+    Bz = extp(field_data_z)
+    Bϕ = extp(field_data_ϕ)
+
+    Ar = extp(potential_data_r)
+    Az = extp(potential_data_z)
+    Aϕ = extp(potential_data_ϕ)
+
+    return MagneticField{T, Cylindrical, WithPotential}(nfp, coords, (Br, Bz, Bϕ), (Ar, Az, Aϕ))
 end
 
 function MagneticField(coords::StructArray{Cylindrical{T, A}},
@@ -78,7 +111,7 @@ function (magnetic_field::MagneticField{F, C})(x::T,
     return (Bx, By, Bz)
 end
 
-function (magnetic_field::MagneticField{F, C})(r::T,
+function (magnetic_field::MagneticField{F, C, Nothing})(r::T,
                                 z::T,
                                 ϕ::T;
                                ) where {F, T, C <: Cylindrical}
@@ -88,4 +121,20 @@ function (magnetic_field::MagneticField{F, C})(r::T,
     Bϕ = magnetic_field.field_data[3](r,z,ϕ)
 
     return (Br, Bz, Bϕ)
+end
+
+function (magnetic_field::MagneticField{F, C, WithPotential})(r::T,
+                                z::T,
+                                ϕ::T;
+                               ) where {F, T, C <: Cylindrical}
+    ϕ = mod(ϕ, 2*π/magnetic_field.nfp)
+    Br = magnetic_field.field_data[1](r,z,ϕ)
+    Bz = magnetic_field.field_data[2](r,z,ϕ)
+    Bϕ = magnetic_field.field_data[3](r,z,ϕ)
+
+    Ar = magnetic_field.potential_data[1](r,z,ϕ)
+    Az = magnetic_field.potential_data[2](r,z,ϕ)
+    Aϕ = magnetic_field.potential_data[3](r,z,ϕ)
+
+    return (Br, Bz, Bϕ), (Ar, Az, Aϕ)
 end
