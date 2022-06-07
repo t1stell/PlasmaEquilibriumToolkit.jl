@@ -34,8 +34,6 @@ function MagneticField(coords::StructArray{Cylindrical},
                         nfp = 1,
                         ) where {T}
 
-    println("rsize: ",size(field_data_r))
-    println("coordsize: ",size(coords))
     size(field_data_r) == size(field_data_z) == size(field_data_ϕ) == size(coords) || throw(DimensionMismatch("Incompatible arrays sizes"))
     knots_dim_1 = getproperty(coords[:, 1, 1], 1)
     knots_dim_2 = getproperty(coords[1, :, 1], 2)
