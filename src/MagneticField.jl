@@ -41,7 +41,7 @@ function MagneticField(coords::StructArray{Cylindrical},
 
     knots = (vector2range(knots_dim_1), vector2range(knots_dim_2), vector2range(knots_dim_3))
     itp_types = (BSpline(Cubic(Free(OnGrid()))),
-                 BSpline(Cubic(Periodic(OnCell()))),
+                 BSpline(Cubic(Periodic(OnGrid()))),
                  BSpline(Cubic(Free(OnGrid()))))
     itp = (f) -> scale(interpolate(f, itp_types), knots...)
     extp = (f) -> extrapolate(itp(f), (Throw(), Periodic(), Throw()))
@@ -70,7 +70,7 @@ function MagneticField(coords::StructArray{Cylindrical},
 
     knots = (vector2range(knots_dim_1), vector2range(knots_dim_2), vector2range(knots_dim_3))
     itp_types = (BSpline(Cubic(Free(OnGrid()))),
-                 BSpline(Cubic(Periodic(OnCell()))),
+                 BSpline(Cubic(Periodic(OnGrid()))),
                  BSpline(Cubic(Free(OnGrid()))))
     itp = (f) -> scale(interpolate(f, itp_types), knots...)
     extp = (f) -> extrapolate(itp(f), (Throw(), Periodic(), Throw()))
@@ -127,15 +127,20 @@ end
 function (magnetic_field::MagneticField{F, C, WithPotential})(r::T,
                                 ϕ::T,
                                 z::T;
+                                A = false
                                ) where {F, T, C <: Cylindrical}
     ϕ = mod(ϕ, 2*π/magnetic_field.nfp)
     Br = magnetic_field.field_data[1](r,ϕ,z)
     Bϕ = magnetic_field.field_data[2](r,ϕ,z)
     Bz = magnetic_field.field_data[3](r,ϕ,z)
+    if A
+      Ar = magnetic_field.potential_data[1](r,ϕ,z)
+      Aϕ = magnetic_field.potential_data[2](r,ϕ,z)
+      Az = magnetic_field.potential_data[3](r,ϕ,z)
 
-    Ar = magnetic_field.potential_data[1](r,ϕ,z)
-    Aϕ = magnetic_field.potential_data[2](r,ϕ,z)
-    Az = magnetic_field.potential_data[3](r,ϕ,z)
 
-    return (Br, Bϕ, Bz), (Ar, Aϕ, Az)
+      return (Br, Bϕ, Bz), (Ar, Aϕ, Az)
+    else
+      return (Br, Bϕ, Bz)
+    end
 end
