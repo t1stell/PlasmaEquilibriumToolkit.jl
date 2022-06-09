@@ -38,7 +38,7 @@ export CylindricalFromFourier
 # Basis vector quantities
 export BasisTransformation, BasisTypes, Covariant, Contravariant
 export CoordinateVector, BasisVectors
-export basis_vectors
+export basis_vectors, normal_vector
 
 # Change of basis quantities
 export CovariantFromContravariant, ContravariantFromCovariant
