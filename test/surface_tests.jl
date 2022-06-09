@@ -30,6 +30,12 @@
     @test derivs==derivscheck
     derivs2 = transform_deriv(CylindricalFromFourier(),fc2,testsurf)
     @test derivs2[1,2] == -1.0
-
+    #check cross product
+    n1 = normal_vector(fc, testsurf)
+    @test n1 ≈ @SVector [1.0, 0.0, 0.0]
+    n2 = normal_vector(fc2, testsurf)
+    @test n2 ≈ @SVector [0.0, 1.0, 0.0]
   end
+
+  
 end
