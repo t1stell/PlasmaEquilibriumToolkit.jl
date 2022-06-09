@@ -19,7 +19,7 @@ function CoordinateTransformations.transform_deriv(::CylindricalFromFourier,
 end
 
 function normal_vector(x::FourierCoordinates{T, T},
-        surf::FourierSurface{T};
+        surf;
         ) where {T}
 
   dRdθ = inverseTransform(x, surf.rmn; deriv=:dθ)
