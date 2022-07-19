@@ -18,7 +18,7 @@
     @test fc.ζ == Float64(π)
   end
 
-  testsurf = FourierSurface{Float64}(rmn, zmn, 1.0);
+  testsurf = FourierSurface(rmn, zmn, 1.0, 1);
   @testset "Generate Surface" begin
     @test testsurf.rmn == rmn;
     @test testsurf.zmn == zmn;
