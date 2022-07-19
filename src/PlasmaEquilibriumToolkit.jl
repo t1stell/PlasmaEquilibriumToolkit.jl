@@ -12,7 +12,7 @@ using Polyester
 # Abstract quantities
 export AbstractMagneticGeometry, AbstractMagneticCoordinates
 export AbstractMagneticEquilibrium, NullEquilibrium
-export AbstractMagneticSurface, MagneticSurface
+export AbstractMagneticSurface, MagneticSurface, SurfaceQuantity
 export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
 export AbstractMagneticField, MagneticField
@@ -26,6 +26,7 @@ export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 
 # Surfaces
 export FourierSurface
+export SurfaceGet, SurfaceGetExact
 
 # Magnetic coordinate transformations
 export FluxFromPest, FluxFromBoozer, FluxFromClebsch
