@@ -36,5 +36,6 @@ function normal_vector(x::FourierCoordinates{T, T},
   return cross(a,b)
 end
 
-function SurfaceGet() end
-function SurfaceGetExact() end
+#Template functions
+function surface_get() end
+function surface_get_exact() end
