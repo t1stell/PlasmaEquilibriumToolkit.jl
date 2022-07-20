@@ -10,12 +10,15 @@ function make_surface_interpolation(valmn,
                  BSpline(Cubic(Periodic(OnCell()))))
   itp = (f) -> scale(interpolate(f, itp_types), knots...)
   extp = (f) -> extrapolate(itp(f), (Periodic(), Periodic()))
-  field = [inverseTransform(FourierCoordinates(0.0, θ, ζ), valmn)
-           for ζ in ζs for θ in θs]
-  field = reshape(field, (θres, ζres))
-  deriv = [inverseTransform(FourierCoordinates(0.0, θ, ζ), valmn, deriv=:ds)
-           for ζ in ζs for θ in θs]
-  deriv = reshape(deriv, (θres, ζres))
+  T = typeof(inverseTransform(FourierCoordinates(0.0, 0.0, 0.0), valmn))
+  field = Array{T, 2}(undef, (length(θs), length(ζs)))
+  deriv = similar(field)
+  for (j, ζ) in enumerate(ζs)
+    for (i, θ) in enumerate(θs)
+      field[i, j] = inverseTransform(FourierCoordinates(0.0, θ, ζ), valmn)
+      deriv[i, j] = inverseTransform(FourierCoordinates(0.0, θ, ζ), valmn, deriv=:ds)
+    end
+  end
   return (extp(field), extp(deriv))
 end
 
