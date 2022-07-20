@@ -10,10 +10,10 @@ function make_surface_interpolation(valmn,
                  BSpline(Cubic(Periodic(OnCell()))))
   itp = (f) -> scale(interpolate(f, itp_types), knots...)
   extp = (f) -> extrapolate(itp(f), (Periodic(), Periodic()))
-  field = [inverseTransform(VmecCoordinates(0.0, θ, ζ), valmn)
+  field = [inverseTransform(FourierCoordinates(0.0, θ, ζ), valmn)
            for ζ in ζs for θ in θs]
   field = reshape(field, (θres, ζres))
-  deriv = [inverseTransform(VmecCoordinates(0.0, θ, ζ), valmn, deriv=:ds)
+  deriv = [inverseTransform(FourierCoordinates(0.0, θ, ζ), valmn, deriv=:ds)
            for ζ in ζs for θ in θs]
   deriv = reshape(deriv, (θres, ζres))
   return (extp(field), extp(deriv))
@@ -71,11 +71,12 @@ function surface_get(x::C,
   end
 end
 
-function surface_get_exact(x::AbstractMagneticCoordinates,
-                           surf::AbstractSurface,
+function surface_get_exact(x::C,
+                           surf::S,
                            quantity::Symbol;
-                           deriv::Symbol=:none) where {T}
-  return inverseTransform(x, getfield(vmecsurf, quantity), deriv=deriv)
+                           deriv::Symbol=:none) where {C <: AbstractMagneticCoordinates,
+                           S <: AbstractSurface}
+  return inverseTransform(x, getfield(surf, quantity), deriv=deriv)
 end
 
 
