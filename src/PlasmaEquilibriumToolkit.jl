@@ -10,7 +10,7 @@ using Polyester
 
 # Export statements
 # Abstract quantities
-export AbstractMagneticGeometry, AbstractMagneticCoordinates
+export AbstractGeometry, AbstractMagneticGeometry, AbstractMagneticCoordinates
 export AbstractMagneticEquilibrium, NullEquilibrium
 export AbstractMagneticSurface, MagneticSurface, SurfaceQuantity
 export AbstractMagneticFieldline, MagneticFieldline
