@@ -143,7 +143,7 @@ end
 
 const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
 
-struct FourierSurface{T} <: AbstractSurface
+mutable struct FourierSurface{T} <: AbstractSurface
   rmn::SurfaceFourierArray{T}
   zmn::SurfaceFourierArray{T}
   r::Union{Nothing, Interpolations.Extrapolation}
