@@ -124,6 +124,11 @@ function (magnetic_field::MagneticField{F, C, Nothing})(r::T,
     return (Br, Bϕ, Bz)
 end
 
+function (magnetic_field::MagneticField{F, C, Nothing})(c::C,
+                                                       ) where {F, T, C <: Cylindrical}
+    return magnetic_field(c.r, c.θ, c.z)
+end
+
 function (magnetic_field::MagneticField{F, C, WithPotential})(r::T,
                                 ϕ::T,
                                 z::T;
@@ -142,5 +147,49 @@ function (magnetic_field::MagneticField{F, C, WithPotential})(r::T,
       return (Br, Bϕ, Bz), (Ar, Aϕ, Az)
     else
       return (Br, Bϕ, Bz)
+    end
+end
+
+
+function (magnetic_field::MagneticField{F, C, WithPotential})(c::C;
+                                                              A = false,
+                                                             ) where {F, T, C <: Cylindrical}
+    return magnetic_field(c.r, c.θ, c.z, A = A)
+end
+
+using Interpolations: gradient
+
+function Interpolations.gradient(itp::Interpolations.Extrapolation, 
+                                 c::Cylindrical;
+                                )
+    return Interpolations.gradient(itp, c.r, c.θ, c.z)
+end
+
+function derivatives(magnetic_field::MagneticField{F, C, Nothing}, 
+                     c::Cylindrical;
+                    ) where {F, C <: Cylindrical}
+    ∂Br = Interpolations.gradient(magnetic_field.field_data[1], c)
+    ∂Bϕ = Interpolations.gradient(magnetic_field.field_data[2], c)
+    ∂Bz = Interpolations.gradient(magnetic_field.field_data[3], c)
+    return @SMatrix [∂Br[1] ∂Br[2] ∂Br[3];
+                     ∂Bϕ[1] ∂Bϕ[2] ∂Bϕ[3];
+                     ∂Bz[1] ∂Bz[2] ∂Bz[3]]
+end
+
+function derivatives(magnetic_field::MagneticField{F, C, WithPotential}, 
+                     c::Cylindrical;
+                     A = false
+                    ) where {F, C <: Cylindrical}
+    ∂Br = Interpolations.gradient(magnetic_field.field_data[1], c)
+    ∂Bϕ = Interpolations.gradient(magnetic_field.field_data[2], c)
+    ∂Bz = Interpolations.gradient(magnetic_field.field_data[3], c)
+    if A
+        ∂Ar = Interpolations.gradient(magnetic_field.potential_data[1], c)
+        ∂Aϕ = Interpolations.gradient(magnetic_field.potential_data[2], c)
+        ∂Az = Interpolations.gradient(magnetic_field.potential_data[3], c)
+        return (SMatrix{3, 3}([∂Br[1] ∂Br[2] ∂Br[3]; ∂Bϕ[1] ∂Bϕ[2] ∂Bϕ[3]; ∂Bz[1] ∂Bz[2] ∂Bz[3]]),
+                SMatrix{3, 3}([∂Ar[1] ∂Ar[2] ∂Ar[3]; ∂Aϕ[1] ∂Aϕ[2] ∂Aϕ[3]; ∂Az[1] ∂Az[2] ∂Az[3]]))
+    else
+        return SMatrix{3, 3}([∂Br[1] ∂Br[2] ∂Br[3]; ∂Bϕ[1] ∂Bϕ[2] ∂Bϕ[3]; ∂Bz[1] ∂Bz[2] ∂Bz[3]])
     end
 end
