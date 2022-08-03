@@ -40,5 +40,20 @@
     @test isapprox(n2, nt, rtol=rtol)
   end
 
+  @testset "test inside surface" begin
+    for r in range(10.0, 12.0, 10)
+      cc = Cylindrical(r, 0.0, 0.0)
+      testval = in_surface(cc, testsurf)
+      xyz = SVector(r, 0.0, 0.0)
+      testval2 = in_surface(xyz, testsurf)
+      if r > 11.0
+        @test testval == false
+        @test testval2 == false
+      else
+        @test testval == true
+        @test testval2 == true
+      end
+    end
+  end
   
 end
