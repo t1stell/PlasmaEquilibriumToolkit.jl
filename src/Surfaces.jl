@@ -122,6 +122,36 @@ function normal_vector(x::C,
   return cross(a,b)
 end
 
-#Template functions
-#function surface_get() end
-#function surface_get_exact() end
+function get_2d_boundary(surf::S, ζ::Float64; res=100
+          ) where {S <: AbstractSurface}
+  boundary_curve = [(surface_get(FourierCoordinates(0.0, θ, ζ), surf, :r), 
+                     surface_get(FourierCoordinates(0.0, θ, ζ), surf, :z))
+                     for θ in range(0,2π,res)]
+  #enforce equality at boundary just in case small errors
+  boundary_curve[end] = boundary_curve[1]
+  return boundary_curve
+
+end
+
+"""
+  in_surface(cc, surf; res=100)
+  in_surface(xyz, surf; res=100)
+
+Calculate where a value is inside a surface given a surface and cylindrical or
+cartesian coordinates. Uses the PolygonOps package
+
+"""
+function in_surface(cc::Cylindrical, surf::S; res=100
+                   ) where {S <: AbstractSurface}
+  ζ = cc.θ
+  boundary_curve = get_2d_boundary(surf, ζ, res=res)
+  point = (cc.r, cc.z)
+  return inpolygon(point, boundary_curve, in=true, on=true, out=false)
+  
+end
+
+function in_surface(xyz::SVector, surf::S; res=100
+                   ) where {S <: AbstractSurface}
+  cc = CylindricalFromCartesian()(xyz)
+  return in_surface(cc, surf, res=res)
+end
