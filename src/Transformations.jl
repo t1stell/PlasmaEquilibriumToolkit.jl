@@ -66,13 +66,13 @@ end
 function jacobian(x::C,
                   eq::E,
                  ) where {C <: AbstractMagneticCoordinates,
-                          E <: AbstractMagneticEquilibrium}
+                          E <: AbstractGeometry}
   throw(ArgumentError("jacobian with $(nameof(typeof(x))) for $(nameof(typeof(eq))) not yet implemented"))
 end
 
 function jacobian(x::AbstractArray,
                   eq::E,
-                 ) where {E <: AbstractMagneticEquilibrium}
+                 ) where {E <: AbstractGeometry}
   res = Array{typeof(getfield(first(x), 1)), ndims(x)}(undef, size(x))
   @batch minbatch=16 for i in eachindex(x, res)
     res[i] = jacobian(x[i], eq)
@@ -149,7 +149,7 @@ end
 
 """
 
-    transform_basis(t::Transformation,x::AbstracyArray{AbstractMagneticCoordinates},e::AbstractArray{BasisVectors{T}},eq::AbstractMagneticEquilibrium)
+    transform_basis(t::Transformation,x::AbstracyArray{AbstractMagneticCoordinates},e::AbstractArray{BasisVectors{T}},eq::AbstractGeometry)
 
 Perform a change of basis for magnetic coordinates denoted by the transformation `t`, using the provided coordinate charts and basis vectors.
 """
@@ -158,7 +158,7 @@ function transform_basis(t::Transformation,
                          e::BasisVectors{T},
                          eq::E;
                         ) where {T, C <: AbstractMagneticCoordinates,
-                                 E <: AbstractMagneticEquilibrium}
+                                 E <: AbstractGeometry}
   throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typoeof(eq)) not yet impleented"))
 end
 
@@ -166,7 +166,7 @@ function transform_basis(t::Transformation,
                          x::AbstractArray,
                          e::AbstractArray{BasisVectors{T}},
                          eq::E,
-                        ) where {T, E <: AbstractMagneticEquilibrium}
+                        ) where {T, E <: AbstractGeometry}
   ndims(x) == ndims(e) && size(x) == size(e) ||
     throw(DimensionMismatch("Incompatible coordinate/basis vector arrays!"))
   res = similar(e)
@@ -181,7 +181,7 @@ function basis_vectors(B::BasisType,
                        c::C,
                        eq::E,
                       ) where {C <: AbstractMagneticCoordinates,
-                               E <: AbstractMagneticEquilibrium}
+                               E <: AbstractGeometry}
   throw(
     ArgumentError(
       "Basis vector construction for $(B) basis with mapping $(T) over $(typeof(c)) does not exist",
@@ -190,7 +190,7 @@ function basis_vectors(B::BasisType,
 end
 
 """
-    basis_vectors(b::BasisType,t::Transformation,x::AbstractArray{T},eq::AbstractMagneticEquilibrium) where T <: AbstractMagneticCoordinates
+    basis_vectors(b::BasisType,t::Transformation,x::AbstractArray{T},eq::AbstractGeometry) where T <: AbstractMagneticCoordinates
 
 Generate basis vectors of type `b` for the magnetic coordinates defined by the transformation `t` at the points given by `x` using data from the magnetic equilibrium `eq`.  The routine providing the point transformation designated by `t` is defined in the respective equilibrium module.
 
@@ -211,7 +211,7 @@ function basis_vectors(B::BasisType,
                        T::Transformation,
                        c::AbstractArray,
                        eq::E,
-                      ) where {E <: AbstractMagneticEquilibrium}
+                      ) where {E <: AbstractGeometry}
   res =
     Array{BasisVectors{typeof(getfield(first(c), 1))},ndims(c)}(undef, size(c))
   @batch minbatch = 16 for i ∈ eachindex(c)
@@ -223,7 +223,7 @@ end
 # `t` needs to be a singleton type
 function (t::Transformation)(x::AbstractArray,
                              eq::E,
-                            ) where {E <: AbstractMagneticEquilibrium}
+                            ) where {E <: AbstractGeometry}
   res = Array{typeof(t(first(x), eq)), ndims(x)}(undef, size(x))
   @batch minbatch = 16 for i ∈ eachindex(x, res)
     res[i] = t(x[i], eq)

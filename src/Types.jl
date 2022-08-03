@@ -58,10 +58,11 @@ abstract type AbstractSurface <: AbstractGeometry end;
 """
    AbstractMagneticSurface
 
-Abstract subtype of AbstracSurface.  These are magnetic surfaces generally 
+Abstract subtype of AbstractSurface.  These are magnetic surfaces generally 
 derived from equilibria of different types
 """
 abstract type AbstractMagneticSurface <: AbstractSurface end;
+
 
 """
     NullEquilibrium()
@@ -142,12 +143,22 @@ end
 
 const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
 
-struct FourierSurface{T} <: AbstractSurface
+mutable struct FourierSurface{T} <: AbstractSurface
   rmn::SurfaceFourierArray{T}
   zmn::SurfaceFourierArray{T}
+  r::Union{Nothing, Interpolations.Extrapolation}
+  z::Union{Nothing, Interpolations.Extrapolation}
+  drds::Union{Nothing, Interpolations.Extrapolation}
+  dzds::Union{Nothing, Interpolations.Extrapolation}
   s::T
+  nfp::Int
 end
   
+function FourierSurface(rmn::SurfaceFourierArray{T}, zmn::SurfaceFourierArray{T}, 
+                        s::T, nfp::Int) where T
+  return FourierSurface(rmn, zmn, nothing, nothing, nothing, nothing, s, nfp)
+end
+
 
 abstract type BasisType end
 

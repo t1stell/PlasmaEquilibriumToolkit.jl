@@ -1,13 +1,29 @@
 using Printf
-export GeneFromPest, GeneFromFlux, geneGeometryCoefficients
+export GeneFromPest, GeneFromFlux, geneGeometryCoefficients, GeneCoordinates
 
 struct GeneFromPest <: Transformation; end
 struct GeneFromFlux <: Transformation; end
 
-function writeGeneGeometry(filename::String,coords,eq::ME,
-                           g::AbstractVector{SVector{6,Float64}},
-                           modB::AbstractVector{Float64},jac::AbstractVector{Float64},K1::AbstractVector{Float64},
-                           K2::AbstractVector{Float64},dBdθ::AbstractVector{Float64}) where ME <: AbstractMagneticEquilibrium
+struct GeneCoordinates{T, A}
+    x::T
+    y::A
+    z::A
+end
+
+function GeneCoordinates(x, y, z)
+    x2, y2, z2 = promote(x, y, z)
+    return GeneCoordinates{typeof(x2),typeof(y2)}(x2, y2, z2)
+end
+
+function writeGeneGeometry(filename::String,
+                           coords,
+                           eq::MG,
+                           g::AbstractVector{SVector{6,T}},
+                           modB::AbstractVector{T},
+                           jac::AbstractVector{T},
+                           K1::AbstractVector{T},
+                           K2::AbstractVector{T},
+                           dBdθ::AbstractVector{T}) where {T, MG <: AbstractGeometry}
   Ba = abs(eq.phi[end]/(π*eq.Aminor_p^2))
   geneFile = filename*".dat"
   io = open(geneFile,"w")
