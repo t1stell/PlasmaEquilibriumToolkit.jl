@@ -28,8 +28,9 @@ function writeGeneGeometry(filename::String,
   geneFile = filename*".dat"
   io = open(geneFile,"w")
   # Write the parameters namelist
-  s0 =getfield(first(coords),1)*2π/eq.phi[end]*eq.signgs
-  α0 = getfield(first(coords),2)
+  s0 = getfield(first(coords),1)*2π/eq.phi[end]*eq.signgs
+  #Assumes coords variable is PEST (ψ,α=θ-ιζ,ζ)
+  α0 = -getfield(first(coords),2)/eq.iota[1]
   coordString = "!PEST coordinates\n"
   q0 = 1.0/eq.iota[1]
   shat = -2*s0/q0*eq.iota[2]*q0^2
