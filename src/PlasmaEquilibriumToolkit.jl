@@ -62,11 +62,6 @@ include("DerivedQuantities.jl")
 include("Surfaces.jl")
 include("MagneticField.jl")
 
-
-
-# Specialzed coordinate defintions, transformations, routines for different codes
-include("Specializations.jl")
-
 const PET = PlasmaEquilibriumToolkit
 export PET
 end
