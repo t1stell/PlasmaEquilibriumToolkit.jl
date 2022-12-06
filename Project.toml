@@ -1,6 +1,8 @@
 name = "PlasmaEquilibriumToolkit"
 uuid = "57ef8d28-8191-49ce-8cf8-17f9379aac88"
-authors = ["Benjamin Faber <bfaber@wisc.edu>", "Aaron Bader <abder@wisc.edu>"]
+authors = ["Benjamin Faber <bfaber@wisc.edu>",
+           "Aaron Bader <abder@wisc.edu>",
+           "Joey Duff <jduff2@wisc.edu>"]
 version = "0.6.0"
 
 [deps]
