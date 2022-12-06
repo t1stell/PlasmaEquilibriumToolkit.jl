@@ -6,6 +6,7 @@ using StructArrays
 using LabelledArrays
 using CoordinateTransformations
 using Interpolations
+using PolygonOps
 using Polyester
 
 # Export statements
@@ -27,6 +28,7 @@ export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 # Surfaces
 export FourierSurface
 export surface_get, surface_get_exact
+export in_surface
 
 # Magnetic coordinate transformations
 export FluxFromPest, FluxFromBoozer, FluxFromClebsch
