@@ -153,6 +153,17 @@ mutable struct FourierSurface{T} <: AbstractSurface
   s::T
   nfp::Int
 end
+
+mutable struct SplineSurface{T} <: AbstractSurface
+  r_points::Array{T, 2}
+  z_points::Array{T, 2}
+  r::Union{Nothing, Interpolations.Extrapolation}
+  z::Union{Nothing, Interpolations.Extrapolation}
+  drds::Union{Nothing, Interpolations.Extrapolation}
+  dzds::Union{Nothing, Interpolations.Extrapolation}
+  s::T #surface label
+  nfp::Int
+end  
   
 function FourierSurface(rmn::SurfaceFourierArray{T}, zmn::SurfaceFourierArray{T}, 
                         s::T, nfp::Int) where T
