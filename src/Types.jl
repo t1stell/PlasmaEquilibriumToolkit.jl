@@ -143,7 +143,7 @@ end
 
 const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
 
-mutable struct FourierSurface{T} <: AbstractSurface
+mutable struct FourierSurface{T, I} <: AbstractSurface
   rmn::SurfaceFourierArray{T}
   zmn::SurfaceFourierArray{T}
   r::Union{Nothing, Interpolations.Extrapolation}
@@ -151,8 +151,21 @@ mutable struct FourierSurface{T} <: AbstractSurface
   drds::Union{Nothing, Interpolations.Extrapolation}
   dzds::Union{Nothing, Interpolations.Extrapolation}
   s::T
-  nfp::Int
+  nfp::I
 end
+
+mutable struct SplineSurface{T, I} <: AbstractSurface
+  r_points::Array{T, 2}
+  z_points::Array{T, 2}
+  ζs::Array{T, 1}
+  θs::Array{T, 1}
+  r::Union{Nothing, Interpolations.Extrapolation}
+  z::Union{Nothing, Interpolations.Extrapolation}
+  drds::Union{Nothing, Interpolations.Extrapolation}
+  dzds::Union{Nothing, Interpolations.Extrapolation}
+  s::T #surface label
+  nfp::I
+end  
   
 function FourierSurface(rmn::SurfaceFourierArray{T}, zmn::SurfaceFourierArray{T}, 
                         s::T, nfp::Int) where T

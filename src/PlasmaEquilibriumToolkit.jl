@@ -26,7 +26,7 @@ export inverseTransform, cosineTransform, sineTransform
 export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 
 # Surfaces
-export FourierSurface
+export FourierSurface, SplineSurface
 export surface_get, surface_get_exact
 export in_surface
 
