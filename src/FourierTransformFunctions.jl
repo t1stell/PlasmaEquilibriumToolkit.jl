@@ -16,23 +16,23 @@ end
 
 #placeholder functions for now
 function dsdθInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
-  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+  return v.m*(v.dsin_ds*cos(v.m*θ-v.n*ζ) - v.dcos_ds*sin(v.m*θ-v.n*ζ))
 end
 
 function dsdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
-  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+  return v.n*(v.dcos_ds*sin(v.m*θ-v.n*ζ) - v.dsin_ds*cos(v.m*θ-v.n*ζ))
 end
 
 function dθdθInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
-  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+  return v.m*v.m*(-1)*inverseKernel(θ, ζ, v)
 end
 
 function dθdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
-  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+  return v.m*v.n*inverseKernel(θ, ζ, v)
 end
 
 function dζdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
-  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+  return v.n*v.n*(-1)*inverseKernel(θ, ζ, v)
 end
 
 function dsdsInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
