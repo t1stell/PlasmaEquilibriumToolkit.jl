@@ -14,6 +14,31 @@ function dζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
   return v.n*(v.cos*sin(v.m*θ-v.n*ζ) - v.sin*cos(v.m*θ-v.n*ζ))
 end
 
+#placeholder functions for now
+function dsdθInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
+  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+end
+
+function dsdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
+  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+end
+
+function dθdθInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
+  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+end
+
+function dθdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
+  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+end
+
+function dζdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
+  return v.dcos_ds*cos(v.m*θ-v.n*ζ) + v.dsin_ds*sin(v.m*θ-v.n*ζ)
+end
+
+function dsdsInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
+  println("ds^2 derivative not implemented")
+  return 0
+end
 
 function cosineKernel(x::AbstractMagneticCoordinates,m::Int,n::Int,A::T) where T
   return A*cos(m*getfield(x,:2)-n*getfield(x,:3))
@@ -51,7 +76,15 @@ function inverseTransform(x::C,
   res = Array{T,1}(undef, length(data))
   θ = getfield(x, :2)
   ζ = getfield(x, :3)
-  kernel = deriv === :none ? inverseKernel : deriv === :ds ? dsInverseKernel : deriv === :dθ ? dθInverseKernel : dζInverseKernel
+  kernel = (deriv === :none ? inverseKernel : 
+            deriv === :ds ? dsInverseKernel : 
+            deriv === :dθ ? dθInverseKernel : 
+            deriv === :dζ ? dζInverseKernel :
+            deriv === :dθdθ ? dθdθInverseKernel :
+            deriv === :dζdζ ? dζdζInverseKernel :
+            deriv === :dsdθ ? dsdθInverseKernel :
+            deriv === :dsdζ ? dsdζInverseKernel : 
+            deriv === :dθdζ ? dθdζInverseKernel : dsdsInverseKernel)
   map!(data_mn->kernel(θ, ζ, data_mn), res,data)
   return sum(res)
 end
