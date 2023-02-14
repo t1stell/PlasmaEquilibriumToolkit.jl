@@ -36,8 +36,7 @@ function dζdζInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
 end
 
 function dsdsInverseKernel(θ::A,ζ::A,v::SurfaceFourierData{T}) where {A, T}
-  println("ds^2 derivative not implemented")
-  return 0
+  return v.d2cos_ds2*cos(v.m*θ-v.n*ζ) + v.d2sin_ds2*sin(v.m*θ-v.n*ζ)
 end
 
 function cosineKernel(x::AbstractMagneticCoordinates,m::Int,n::Int,A::T) where T
