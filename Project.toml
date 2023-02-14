@@ -3,7 +3,7 @@ uuid = "57ef8d28-8191-49ce-8cf8-17f9379aac88"
 authors = ["Benjamin Faber <bfaber@wisc.edu>",
            "Aaron Bader <abder@wisc.edu>",
            "Joey Duff <jduff2@wisc.edu>"]
-version = "0.6.2"
+version = "0.7.0"
 
 [deps]
 CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
