@@ -4,8 +4,8 @@
   rcos = [10.0, 1.0];
   zsin = [0.0, 1.0];
   dummy = [0.0, 0.0];
-  rmn = StructArray{SurfaceFourierData{Float64}}((m, n, rcos, dummy, dummy, dummy));
-  zmn = StructArray{SurfaceFourierData{Float64}}((m, n, dummy, zsin, dummy, dummy));
+  rmn = StructArray{SurfaceFourierData{Float64}}((m, n, rcos, dummy, dummy, dummy, dummy, dummy));
+  zmn = StructArray{SurfaceFourierData{Float64}}((m, n, dummy, zsin, dummy, dummy, dummy, dummy));
   fc = FourierCoordinates(1.0, 0.0, π)
   fc2 = FourierCoordinates(1.0, π/2, π)
   rtol = 1.0E-4
