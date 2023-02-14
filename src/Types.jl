@@ -139,6 +139,8 @@ struct SurfaceFourierData{T}
   sin::T
   dcos_ds::T
   dsin_ds::T
+  d2sin_ds2::T
+  d2cos_ds2::T
 end
 
 const SurfaceFourierArray{T} = StructArray{SurfaceFourierData{T}} where T
