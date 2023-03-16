@@ -37,6 +37,8 @@ export PestFromFlux, PestFromBoozer, PestFromClebsch
 export BoozerFromFlux, BoozerFromPest, BoozerFromClebsch
 export CylindricalFromFlux, CylindricalFromPest, CylindricalFromBoozer
 export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
+export InternalFromFlux, InternalFromPest
+export FluxFromInternal, PestFromInternal
 export CylindricalFromFourierm, θ_internal, flux_surface_and_angle
 
 # Basis vector quantities

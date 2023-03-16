@@ -14,7 +14,10 @@ struct CartesianFromPest <: Transformation end
 struct ContravariantFromCovariant <: BasisTransformation end
 struct CovariantFromContravariant <: BasisTransformation end
 struct CylindricalFromFourier <: Transformation end
-
+struct InternalFromFlux <: Transformation end
+struct InternalFromPest <: Transformation end
+struct PestFromInternal <: Transformation end
+struct FluxFromInternal <: Transformation end
 
 """
     abs(e::BasisVectors{T},component=0)
