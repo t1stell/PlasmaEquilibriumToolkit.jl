@@ -8,6 +8,7 @@ using CoordinateTransformations
 using Interpolations
 using PolygonOps
 using Polyester
+using Roots
 
 # Export statements
 # Abstract quantities
