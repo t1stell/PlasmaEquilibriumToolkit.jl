@@ -230,3 +230,40 @@ function (t::Transformation)(x::AbstractArray,
   end
   return isstructtype(eltype(res)) ? StructArray(res) : res
 end
+
+
+"""
+    θ_internal(x::FluxCoordinates,λ::Symbol,interval=0.25)
+
+Computes the internal θ coordinate associated with the points `x` specified
+in `FluxCoordinates`. The surface must have a λ component to relate the angles
+"""
+function θ_internal(x::FluxCoordinates,
+                  surf::S,
+                  interval=0.25) where {S <: AbstractSurface}
+
+  function residual(θ::T) where {T <: AbstractFloat}
+    return θ - x.θ + surface_get(FluxCoordinates(x.ψ, θ, x.ζ), surf, :λ)
+  end
+
+  bracket = (x.θ-interval,x.θ+interval)
+  try
+    return Roots.find_zero(residual,bracket,Roots.Order2())
+  catch err
+    if is(err,Roots.ConvergenceFailed) && attempt <= 5
+      return thetaVmec(x,λ,2*interval)
+    end
+  end
+end
+
+function θ_internal(x::AbstractArray{FluxCoordinates},
+                   surf::S;
+                  ) where {S <: AbstractSurface}
+  T = typeof(x.θ)
+  y = Array{T, ndims(x)}(undef,size(x))
+  @batch for i in eachindex(x)
+    y[i] = thetaVmec(x[i], surf)
+  end
+  return y
+end
+

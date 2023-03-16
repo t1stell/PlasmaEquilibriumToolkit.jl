@@ -36,7 +36,7 @@ export PestFromFlux, PestFromBoozer, PestFromClebsch
 export BoozerFromFlux, BoozerFromPest, BoozerFromClebsch
 export CylindricalFromFlux, CylindricalFromPest, CylindricalFromBoozer
 export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
-export CylindricalFromFourier
+export CylindricalFromFourierm, θ_internal
 
 # Basis vector quantities
 export BasisTransformation, BasisTypes, Covariant, Contravariant
