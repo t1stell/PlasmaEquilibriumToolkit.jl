@@ -267,3 +267,12 @@ function θ_internal(x::AbstractArray{FluxCoordinates},
   return y
 end
 
+""" 
+    flux_surface_and_angle(x::AbstractMagneticCoordinates, E::AbstractMagneticEquilibrium)
+
+Dummy function to guess both the radial and θ value for an equilibrium. This needs to be defined
+in the files for the given equilibrium, since it is difficult to abstract
+"""
+function flux_surface_and_angle(x::Cylindrical{T, T}, eq::E) where {T, E <: AbstractMagneticEquilibrium}
+    error("flux_surface_and_angle not implemented for equilibrium type $(E)")
+end
