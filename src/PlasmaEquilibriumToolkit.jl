@@ -41,8 +41,7 @@ export InternalFromFlux, InternalFromPest
 export FluxFromInternal, PestFromInternal
 export CylindricalFromInternal, InternalFromCylindrical
 export CartesianFromInternal, InternalFromCartesian
-export CylindricalFromFourierm, θ_internal, flux_surface_and_angle
-export transform_deriv
+export CylindricalFromFourier, θ_internal, flux_surface_and_angle
 
 # Basis vector quantities
 export BasisTransformation, BasisTypes, Covariant, Contravariant

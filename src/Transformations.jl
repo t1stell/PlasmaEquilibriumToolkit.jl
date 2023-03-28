@@ -87,6 +87,25 @@ function jacobian(x::AbstractArray,
   return res
 end
 
+###Coordinate transformations
+function (::CylindricalFromInternal)(x::C, surf::S
+                                    ) where {C <: AbstractMagneticCoordinates, 
+                                             S <: AbstractMagneticSurface
+                                            }
+  R = surface_get(x, surf, :r)
+  Z = surface_get(x, surf, :z)
+  return Cylindrical(R, x.ζ, Z)
+end
+
+function (::CartesianFromInternal)(x::C, surf::S
+                                  ) where {C <: AbstractMagneticCoordinates, 
+                                           S <: AbstractMagneticSurface
+                                          }
+  cc = CylindricalFromInternal()(x, surf)
+  return CartesianFromCylindrical()(cc)
+end
+
+
 """
     transform_basis(t::BasisTransformation, e::BasisVectors)
     transform_basis(t::BasisTransformation, e::BasisVectors, jacobian)
@@ -285,10 +304,10 @@ function flux_surface_and_angle(x::Cylindrical{T, T}, eq::E) where {T, E <: Abst
 end
 
 
-function transform_deriv(::CylindricalFromFlux,
-                         x::FluxCoordinates,
-                         surf::S;
-                        ) where {S <: AbstractMagneticSurface}
+function CoordinateTransformations.transform_deriv(::CylindricalFromFlux,
+                                                   x::FluxCoordinates,
+                                                   surf::S;
+                                    ) where {S <: AbstractMagneticSurface}
   ic = InternalFromFlux()(x,surf)
   dV = derivatives(ic,surf)
   dsdψ = 2π/surf.phi[end]*surf.signgs
@@ -311,11 +330,31 @@ function transform_deriv(::CylindricalFromFlux,
                    dZdψ dZdθ dZdζ]
 end
 
-function transform_deriv(::CylindricalFromInternal,
-                         x::C,
-                         surf::S;
-                        ) where {C <: AbstractMagneticCoordinates, 
-                                 S <: AbstractMagneticSurface}
+function CoordinateTransformations.transform_deriv(::CylindricalFromFourier,
+                                                   x::C,
+                                                   surf::S;
+         ) where {C <: AbstractMagneticCoordinates, S <: AbstractSurface}
+  dRds = surface_get(x, surf, :r; deriv=:ds)
+  dZds = surface_get(x, surf, :z; deriv=:ds)
+  dϕds = zero(typeof(x.θ))
+
+  dRdθ = surface_get(x, surf, :r; deriv=:dθ)
+  dZdθ = surface_get(x, surf, :z; deriv=:dθ)
+  dϕdθ = zero(typeof(x.θ))
+
+  dRdζ = surface_get(x, surf, :r; deriv=:dζ)
+  dZdζ = surface_get(x, surf, :z; deriv=:dζ)
+  dϕdζ = one(typeof(x.θ))
+  return @SMatrix [dRds dRdθ dRdζ;
+                   dϕds dϕdθ dϕdζ;
+                   dZds dZdθ dZdζ]
+end
+
+function CoordinateTransformations.transform_deriv(::CylindricalFromInternal,
+                                                   x::C,
+                                                   surf::S;
+                                  ) where {C <: AbstractMagneticCoordinates, 
+                                           S <: AbstractMagneticSurface}
   dRds = surface_get(x, surf, :r, deriv=:ds)
   dZds = surface_get(x, surf, :z, deriv=:ds)
   dϕds = zero(typeof(x.θ))

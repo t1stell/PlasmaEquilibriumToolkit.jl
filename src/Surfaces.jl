@@ -82,28 +82,6 @@ function surface_get_exact(x::C,
   return inverseTransform(x, getfield(surf, quantity), deriv=deriv)
 end
 
-
-
-function CoordinateTransformations.transform_deriv(::CylindricalFromFourier, 
-			                                             x::C,
-                                                   surf::S;
-         ) where {C <: AbstractMagneticCoordinates, S <: AbstractSurface}
-  dRds = surface_get(x, surf, :r; deriv=:ds)
-  dZds = surface_get(x, surf, :z; deriv=:ds)
-  dϕds = zero(typeof(x.θ))
-
-  dRdθ = surface_get(x, surf, :r; deriv=:dθ)
-  dZdθ = surface_get(x, surf, :z; deriv=:dθ)
-  dϕdθ = zero(typeof(x.θ))
-
-  dRdζ = surface_get(x, surf, :r; deriv=:dζ)
-  dZdζ = surface_get(x, surf, :z; deriv=:dζ)
-  dϕdζ = one(typeof(x.θ))
-  return @SMatrix [dRds dRdθ dRdζ;
-                   dϕds dϕdθ dϕdζ;
-                   dZds dZdθ dZdζ]
-end
-
 function normal_vector(x::C,
         surf::S;
         ) where {C <: AbstractMagneticCoordinates, S <: AbstractSurface}
