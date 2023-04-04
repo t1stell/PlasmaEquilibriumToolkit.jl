@@ -22,6 +22,10 @@ function make_surface_interpolation(valmn,
   return (extp(field), extp(deriv))
 end
 
+function magnetic_surface(s::T, eq::E; opt::O) where {T, E <: AbstractMagneticEquilibrium, O}
+  println("No surface implemented for eq of type: ",typeof(eq))
+end
+
 function surface_get(x::C,
                      surf::S,
                      quantity::Symbol;

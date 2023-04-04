@@ -28,7 +28,7 @@ export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 
 # Surfaces
 export FourierSurface, SplineSurface
-export surface_get, surface_get_exact
+export magnetic_surface, surface_get, surface_get_exact
 export in_surface
 
 # Magnetic coordinate transformations
