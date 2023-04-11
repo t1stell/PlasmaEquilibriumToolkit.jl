@@ -185,7 +185,7 @@ function transform_basis(t::Transformation,
                          eq::E;
                         ) where {T, C <: AbstractMagneticCoordinates,
                                  E <: AbstractGeometry}
-  throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typoeof(eq)) not yet impleented"))
+  throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typeof(eq)) not yet implemented"))
 end
 
 function transform_basis(t::Transformation,

@@ -14,7 +14,7 @@ using Roots
 # Abstract quantities
 export AbstractGeometry, AbstractMagneticGeometry, AbstractMagneticCoordinates
 export AbstractMagneticEquilibrium, NullEquilibrium
-export AbstractMagneticSurface, MagneticSurface, SurfaceQuantity
+export AbstractMagneticSurface, MagneticSurface, AbstractSurface, SurfaceQuantity
 export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
 export AbstractMagneticField, MagneticField
