@@ -8,12 +8,13 @@ using CoordinateTransformations
 using Interpolations
 using PolygonOps
 using Polyester
+using Roots
 
 # Export statements
 # Abstract quantities
 export AbstractGeometry, AbstractMagneticGeometry, AbstractMagneticCoordinates
 export AbstractMagneticEquilibrium, NullEquilibrium
-export AbstractMagneticSurface, MagneticSurface, SurfaceQuantity
+export AbstractMagneticSurface, MagneticSurface, AbstractSurface, SurfaceQuantity
 export AbstractMagneticFieldline, MagneticFieldline
 export MagneticCoordinateGrid, MagneticCoordinateCurve
 export AbstractMagneticField, MagneticField
@@ -27,7 +28,7 @@ export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
 
 # Surfaces
 export FourierSurface, SplineSurface
-export surface_get, surface_get_exact
+export magnetic_surface, surface_get, surface_get_exact
 export in_surface
 
 # Magnetic coordinate transformations
@@ -36,7 +37,11 @@ export PestFromFlux, PestFromBoozer, PestFromClebsch
 export BoozerFromFlux, BoozerFromPest, BoozerFromClebsch
 export CylindricalFromFlux, CylindricalFromPest, CylindricalFromBoozer
 export CartesianFromFlux, CartesianFromPest, CartesianFromBoozer
-export CylindricalFromFourier
+export InternalFromFlux, InternalFromPest
+export FluxFromInternal, PestFromInternal
+export CylindricalFromInternal, InternalFromCylindrical
+export CartesianFromInternal, InternalFromCartesian
+export CylindricalFromFourier, θ_internal, flux_surface_and_angle
 
 # Basis vector quantities
 export BasisTransformation, BasisTypes, Covariant, Contravariant

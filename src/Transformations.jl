@@ -14,7 +14,14 @@ struct CartesianFromPest <: Transformation end
 struct ContravariantFromCovariant <: BasisTransformation end
 struct CovariantFromContravariant <: BasisTransformation end
 struct CylindricalFromFourier <: Transformation end
-
+struct InternalFromFlux <: Transformation end
+struct InternalFromPest <: Transformation end
+struct PestFromInternal <: Transformation end
+struct FluxFromInternal <: Transformation end
+struct CylindricalFromInternal <: Transformation end
+struct InternalFromCylindrical <: Transformation end
+struct CartesianFromInternal <: Transformation end
+struct InternalFromCartesian <: Transformation end
 
 """
     abs(e::BasisVectors{T},component=0)
@@ -79,6 +86,25 @@ function jacobian(x::AbstractArray,
   end
   return res
 end
+
+###Coordinate transformations
+function (::CylindricalFromInternal)(x::C, surf::S
+                                    ) where {C <: AbstractMagneticCoordinates, 
+                                             S <: AbstractMagneticSurface
+                                            }
+  R = surface_get(x, surf, :r)
+  Z = surface_get(x, surf, :z)
+  return Cylindrical(R, x.ζ, Z)
+end
+
+function (::CartesianFromInternal)(x::C, surf::S
+                                  ) where {C <: AbstractMagneticCoordinates, 
+                                           S <: AbstractMagneticSurface
+                                          }
+  cc = CylindricalFromInternal()(x, surf)
+  return CartesianFromCylindrical()(cc)
+end
+
 
 """
     transform_basis(t::BasisTransformation, e::BasisVectors)
@@ -159,7 +185,7 @@ function transform_basis(t::Transformation,
                          eq::E;
                         ) where {T, C <: AbstractMagneticCoordinates,
                                  E <: AbstractGeometry}
-  throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typoeof(eq)) not yet impleented"))
+  throw(ArgumentError("Basis transformation for $(typeof(t)) for coordinates $(typeof(x)) and equilibrium $(typeof(eq)) not yet implemented"))
 end
 
 function transform_basis(t::Transformation,
@@ -230,3 +256,145 @@ function (t::Transformation)(x::AbstractArray,
   end
   return isstructtype(eltype(res)) ? StructArray(res) : res
 end
+
+
+"""
+    θ_internal(x::FluxCoordinates,λ::Symbol,interval=0.25)
+
+Computes the internal θ coordinate associated with the points `x` specified
+in `FluxCoordinates`. The surface must have a λ component to relate the angles
+"""
+function θ_internal(x::FluxCoordinates,
+                  surf::S,
+                  interval=0.25) where {S <: AbstractSurface}
+
+  function residual(θ::T) where {T <: AbstractFloat}
+    return θ - x.θ + surface_get(FluxCoordinates(x.ψ, θ, x.ζ), surf, :λ)
+  end
+
+  bracket = (x.θ-interval,x.θ+interval)
+  try
+    return Roots.find_zero(residual,bracket,Roots.Order2())
+  catch err
+    if is(err,Roots.ConvergenceFailed) && attempt <= 5
+      return thetaVmec(x,λ,2*interval)
+    end
+  end
+end
+
+function θ_internal(x::AbstractArray{FluxCoordinates},
+                   surf::S;
+                  ) where {S <: AbstractSurface}
+  T = typeof(x.θ)
+  y = Array{T, ndims(x)}(undef,size(x))
+  @batch for i in eachindex(x)
+    y[i] = thetaVmec(x[i], surf)
+  end
+  return y
+end
+
+""" 
+    flux_surface_and_angle(x::AbstractMagneticCoordinates, E::AbstractMagneticEquilibrium)
+
+Dummy function to guess both the radial and θ value for an equilibrium. This needs to be defined
+in the files for the given equilibrium, since it is difficult to abstract
+"""
+function flux_surface_and_angle(x::Cylindrical{T, T}, eq::E) where {T, E <: AbstractMagneticEquilibrium}
+    error("flux_surface_and_angle not implemented for equilibrium type $(E)")
+end
+
+
+function CoordinateTransformations.transform_deriv(::CylindricalFromFlux,
+                                                   x::FluxCoordinates,
+                                                   surf::S;
+                                    ) where {S <: AbstractMagneticSurface}
+  ic = InternalFromFlux()(x,surf)
+  dV = derivatives(ic,surf)
+  dsdψ = 2π/surf.phi[end]*surf.signgs
+  dΛdθv = dV[2,2]
+  dΛdζv = dV[2,3]
+
+  dRdψ = dV[1,1]*dsdψ
+  dZdψ = dV[3,1]*dsdψ
+  dϕdψ = zero(typeof(x.θ))
+
+  dRdθ = dV[1,2]/(1+dΛdθv)
+  dZdθ = dV[3,2]/(1+dΛdθv)
+  dϕdθ = zero(typeof(x.θ))
+
+  dRdζ = -dV[1,3] + dV[1,2]*dΛdζv/(1+dΛdθv)
+  dZdζ = -dV[3,3] + dV[3,2]*dΛdζv/(1+dΛdθv)
+  dϕdζ = one(typeof(x.θ))
+  return @SMatrix [dRdψ dRdθ dRdζ;
+                   dϕdψ dϕdθ dϕdζ;
+                   dZdψ dZdθ dZdζ]
+end
+
+function CoordinateTransformations.transform_deriv(::CylindricalFromFourier,
+                                                   x::C,
+                                                   surf::S;
+         ) where {C <: AbstractMagneticCoordinates, S <: AbstractSurface}
+  dRds = surface_get(x, surf, :r; deriv=:ds)
+  dZds = surface_get(x, surf, :z; deriv=:ds)
+  dϕds = zero(typeof(x.θ))
+
+  dRdθ = surface_get(x, surf, :r; deriv=:dθ)
+  dZdθ = surface_get(x, surf, :z; deriv=:dθ)
+  dϕdθ = zero(typeof(x.θ))
+
+  dRdζ = surface_get(x, surf, :r; deriv=:dζ)
+  dZdζ = surface_get(x, surf, :z; deriv=:dζ)
+  dϕdζ = one(typeof(x.θ))
+  return @SMatrix [dRds dRdθ dRdζ;
+                   dϕds dϕdθ dϕdζ;
+                   dZds dZdθ dZdζ]
+end
+
+function CoordinateTransformations.transform_deriv(::CylindricalFromInternal,
+                                                   x::C,
+                                                   surf::S;
+                                  ) where {C <: AbstractMagneticCoordinates, 
+                                           S <: AbstractMagneticSurface}
+  dRds = surface_get(x, surf, :r, deriv=:ds)
+  dZds = surface_get(x, surf, :z, deriv=:ds)
+  dϕds = zero(typeof(x.θ))
+
+  dRdθ = surface_get(x, surf, :r, deriv=:dθ)
+  dZdθ = surface_get(x, surf, :z, deriv=:dθ)
+  dϕdθ = zero(typeof(x.θ))
+
+  dRdζ = surface_get(x, surf, :r, deriv=:dζ)
+  dZdζ = surface_get(x, surf, :z, deriv=:dζ)
+  dϕdζ = one(typeof(x.θ))
+  return @SMatrix [dRds dRdθ dRdζ;
+                   dϕds dϕdθ dϕdζ;
+                   dZds dZdθ dZdζ]
+end
+
+function derivatives(x::C, surf::S
+        ) where {C <: AbstractMagneticCoordinates, S <: AbstractMagneticSurface}
+  dRds = surface_get(x, surf, :r, deriv=:ds)
+  dZds = surface_get(x, surf, :z, deriv=:ds)
+  dλds = surface_get(x, surf, :λ, deriv=:ds)
+
+  dRdθ = surface_get(x, surf, :r, deriv=:dθ)
+  dZdθ = surface_get(x, surf, :z, deriv=:dθ)
+  dλdθ = surface_get(x, surf, :λ, deriv=:dθ)
+
+  dRdζ = surface_get(x, surf, :r, deriv=:dζ)
+  dZdζ = surface_get(x, surf, :z, deriv=:dζ)
+  dλdζ = surface_get(x, surf, :λ, deriv=:dζ)
+  return @SMatrix [dRds dRdθ dRdζ;
+                   dλds dλdθ dλdζ;
+                   dZds dZdθ dZdζ]
+end
+
+function derivatives(x::C, surf::S, field::Symbol
+        ) where {C <: AbstractMagneticCoordinates, S <: AbstractMagneticSurface}
+  
+  ds = surface_get(x, surf, field, deriv=:ds)
+  dθ = surface_get(x, surf, field, deriv=:dθ)
+  dζ = surface_get(x, surf, field, deriv=:dζ)
+  return @SVector [ds, dθ, dζ]
+end
+
