@@ -125,7 +125,7 @@ function (magnetic_field::MagneticField{F, C, Nothing})(r::T,
 end
 
 function (magnetic_field::MagneticField{F, C, Nothing})(c::C,
-                                                       ) where {F, T, C <: Cylindrical}
+                                                       ) where {F, C <: Cylindrical}
     return magnetic_field(c.r, c.θ, c.z)
 end
 
@@ -153,7 +153,7 @@ end
 
 function (magnetic_field::MagneticField{F, C, WithPotential})(c::C;
                                                               A = false,
-                                                             ) where {F, T, C <: Cylindrical}
+                                                             ) where {F, C <: Cylindrical}
     return magnetic_field(c.r, c.θ, c.z, A = A)
 end
 
