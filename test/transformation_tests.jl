@@ -41,10 +41,10 @@
     rng = ARS1x(seed)
     vecs = [BasisVectors{Float64}(rand(rng, 9)) for i = 1:256]
     jacs = [jacobian(Covariant(), v) for v in vecs]
-    @test transform_basis(ContravariantFromCovariant(), vecs) ==
+    @test transform_basis(ContravariantFromCovariant(), vecs) .==
           transform_basis(ContravariantFromCovariant(), vecs, jacs)
     jacs = [jacobian(Contravariant(), v) for v in vecs]
-    @test transform_basis(CovariantFromContravariant(), vecs) ==
+    @test transform_basis(CovariantFromContravariant(), vecs) .==
           transform_basis(CovariantFromContravariant(), vecs, jacs)
   end
 end
