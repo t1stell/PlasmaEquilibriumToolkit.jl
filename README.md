@@ -1,6 +1,6 @@
 # PlasmaEquilibriumToolkit.jl
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://wistell.gitlab.io/PlasmaEquilibriumToolkit.jl/dev)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://wistell.gitlab.io/PlasmaEquilibriumToolkit.jl/gitlab_pages)
 [![Build Status](https://gitlab.com/wistell/PlasmaEquilibriumToolkit.jl/badges/master/pipeline.svg)](https://gitlab.com/wistell/PlasmaEquilibriumToolkit.jl/pipelines)
 [![Coverage](https://gitlab.com/wistell/PlasmaEquilibriumToolkit.jl/badges/master/coverage.svg)](https://gitlab.com/wistell/PlasmaEquilibriumToolkit.jl/commits/master)
 
