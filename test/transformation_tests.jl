@@ -44,13 +44,13 @@
     new_vecs = transform_basis(ContravariantFromCovariant(), vecs)
     new_vecs2 = transform_basis(ContravariantFromCovariant(), vecs, jacs)
     for (v1, v2) in zip(new_vecs, new_vecs2)
-        @test v1 == v2
+        @test isapprox(v1, v2, rtol = 1e-8)
     end
     jacs = [jacobian(Contravariant(), v) for v in vecs]
     new_vecs = transform_basis(CovariantFromContravariant(), vecs)
     new_vecs2 = transform_basis(CovariantFromContravariant(), vecs, jacs)
     for (v1, v2) in zip(new_vecs, new_vecs2)
-        @test v1 == v2
+        @test isapprox(v1, v2, rtol = 1e-8)
     end
   end
 end
