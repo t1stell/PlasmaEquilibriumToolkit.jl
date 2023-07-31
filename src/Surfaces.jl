@@ -123,12 +123,17 @@ Calculate where a value is inside a surface given a surface and cylindrical or
 cartesian coordinates. Uses the PolygonOps package
 
 """
+function in_surface(point::Tuple{F, F}, boundary_curve::Vector{Tuple{F, F}}) where {F <: Real}
+  #helper version to allow calling with other surfaces
+  return inpolygon(point, boundary_curve, in=true, on=true, out=false)
+end
+
 function in_surface(cc::Cylindrical, surf::S; res=100
                    ) where {S <: AbstractSurface}
   ζ = cc.θ
   boundary_curve = get_2d_boundary(surf, ζ, res=res)
   point = (cc.r, cc.z)
-  return inpolygon(point, boundary_curve, in=true, on=true, out=false)
+  return in_surface(point, boundary_curve)
   
 end
 
