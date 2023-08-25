@@ -138,7 +138,7 @@ function in_surface(cc::Cylindrical, surf::S; res=100
                    ) where {S <: AbstractSurface}
   ζ = cc.θ
   boundary_curve = get_2d_boundary(surf, ζ, res=res)
-  point = (cc.r, cc.z)
+  point = @SVector [cc.r, cc.z]
   return in_surface(point, boundary_curve)
   
 end
