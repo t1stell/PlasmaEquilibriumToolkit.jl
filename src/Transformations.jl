@@ -50,6 +50,11 @@ function abs(e::BasisVectors{T}, component::Int = 0) where {T}
   end
 end
 
+function internal_coordinates(surf::S, x, y, z) where {S <: AbstractMagneticSurface}
+    println("internal coordinates not defined for surface of type: ",typeof(surf))
+end
+    
+
 
 """
     jacobian(t::BasisType,e::BasisVectors{T})

@@ -25,6 +25,7 @@ export inverseTransform, cosineTransform, sineTransform
 
 # Magnetic coordinate concretizations
 export ClebschCoordinates, FluxCoordinates, PestCoordinates, BoozerCoordinates
+export internal_coordinates
 
 # Surfaces
 export FourierSurface, SplineSurface
