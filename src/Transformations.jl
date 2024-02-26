@@ -276,7 +276,7 @@ function θ_internal(x::FluxCoordinates,
   try
     return Roots.find_zero(residual,bracket,Roots.Order2())
   catch err
-    if is(err,Roots.ConvergenceFailed) && attempt <= 5
+    if isa(err,Roots.ConvergenceFailed) && attempt <= 5
       return thetaVmec(x,λ,2*interval)
     end
   end
