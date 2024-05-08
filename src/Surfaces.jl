@@ -148,3 +148,63 @@ function in_surface(xyz::SVector, surf::S; res=100
   cc = CylindricalFromCartesian()(xyz)
   return in_surface(cc, surf, res=res)
 end
+
+
+#cribbed version of "inpolygon" from PolygonOps but without
+#the obnoxious input format
+function in_surface(x::T, 
+                    y::T,
+                    xwall::Vector{T},
+                    ywall::Vector{T};
+                    inverse::Bool=false) where {T <: Real}
+
+    if abs(xwall[1] - xwall[end]) > 1.0E-12
+        println("Warning: x wall dimensions do not match, aborting calc")
+        return !inverse
+    elseif abs(ywall[1] - ywall[end]) > 1.0E-12
+        println("Warning: y wall dimensions do not match, aborting calc")
+        return !inverse
+    end
+
+    k=0
+    for i in UnitRange(firstindex(xwall), lastindex(xwall) - 1)
+        v1 = ywall[i] - y
+        v2 = ywall[i+1] - y
+
+        if v1 < zero(T) && v2 < zero(T) || v1 > zero(T) && v2 > zero(T)
+            continue
+        end
+
+        u1 = xwall[i] - x
+        u2 = xwall[i+1] - x
+
+        f = (u1 * v2) - (u2 * v1)
+
+        if v2 > zero(T) && v1 <= zero(T) 
+            if f > zero(T)
+                k += 1
+            elseif iszero(f)
+                return !inverse
+            end
+        elseif v1 > zero(T) && v2 <= zero(T)
+            if f < zero(T)
+                k += 1
+            elseif iszero(f)
+                return !inverse
+            end
+        elseif iszero(v2) && v1 < zero(T)
+            iszero(f) && return !inverse
+        elseif iszero(v1) && v2 < zero(T)
+            iszero(f) && return !inverse
+        elseif iszero(v1) && iszero(v2)
+            if u2 <= zero(T) && u1 >= zero(T)
+                return !inverse
+            elseif u1 <= zero(T) && u2 >= zero(T)
+                return !inverse
+            end
+        end
+    end
+
+    iszero(k%2) && return inverse
+    return !inverse
+end

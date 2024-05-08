@@ -54,6 +54,11 @@
         @test testval2 == true
       end
     end
+    xw = [0.0, 1.0, 1.0, 0.0, 0.0]
+    yw = [0.0, 0.0, 1.0, 1.0, 0.0]
+    @test in_surface(0.5, 0.5, xw, yw)
+    @test !in_surface(-0.5, 0.5, xw, yw)
+
   end
   
 end
