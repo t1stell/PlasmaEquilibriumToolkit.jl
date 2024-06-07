@@ -294,13 +294,13 @@ function normal_curvature(B::CoordinateVector{T},
                           ∇B::CoordinateVector{T},
                           ∇X::CoordinateVector{T},
                           ∇Y::CoordinateVector{T};
-                          dpdpsi::Real=0.0,
+                          dpdψ::Real=0.0,
                          ) where {T}
   #return dot(cross(B, ∇B), ∇Y * dot(∇X, ∇X) .- ∇X * dot(∇X, ∇Y)) / (norm(B)^3 * norm(∇X)) # Original formula implemented,  
   #κₙ = (B × ∇B) ⋅ ((∇ψ⋅∇ψ)∇α - (∇ψ⋅∇α)∇ψ)/(B³|∇ψ|), only valid for beta=0
 
   #return dot(∇B/norm(B),∇X/norm(∇X)) # equivalent beta = 0 formula, much simpler
-  return dot((∇B/norm(B) - 4π * 1e-7 * dpdpsi/norm(B)^2*∇X),∇X/norm(∇X)) # Finite beta formula; negative formula in front of the pressure
+  return dot((∇B/norm(B) - 4π * 1e-7 * dpdψ/norm(B)^2*∇X),∇X/norm(∇X)) # Finite beta formula; negative formula in front of the pressure
   # term because of the sign convention for ∇X
 end
 
@@ -328,16 +328,16 @@ See also: [`normal_curvature`](@ref), [`geodesic_curvature`](@ref)
 """
 function curvature_components(∇X::BasisVectors{T},
                               ∇B::CoordinateVector{T};
-                              dpdpsi::Real=0.0,
+                              dpdψ::Real=0.0,
                              ) where {T}
   B = cross(∇X[:, 1], ∇X[:, 2])
-  return normal_curvature(B, ∇B, ∇X[:, 1], ∇X[:, 2],dpdpsi=dpdpsi),
+  return normal_curvature(B, ∇B, ∇X[:, 1], ∇X[:, 2],dpdψ=dpdψ),
          geodesic_curvature(B, ∇B,∇X[:, 1])
 end
 
 function curvature_components(∇X::AbstractArray{BasisVectors{T}},
                               ∇B::AbstractArray{CoordinateVector{T}};
-                              dpdpsi::Real=0.0,
+                              dpdψ::Real=0.0,
                              ) where {T}
   size(∇X) == size(∇B) || throw(
     DimensionMismatch("Basis vectors and ∇B arrays must have the same size"),
