@@ -3,6 +3,9 @@
     rng = ARS1x(seed)
     B_vec = BasisVectors{Float64}(0.8 .+ rand(rng, 9))
     ι = 1.0 + rand(rng)
+    dpdψ = -1.1E5 
+    ∇X = BasisVectors{Float64}(0.5 .+ rand(rng, 9))
+    ∇B = CoordinateVector{Float64}(rand(rng, 3))
     @testset "B_norm" begin
         @test isapprox(B_norm(Contravariant(), B_vec), 0.9589876106776953)
         @test_throws ArgumentError B_norm(Covariant(), B_vec)
@@ -34,4 +37,14 @@
         )
         @test B_field(B_vec) == B_field(Contravariant(), B_vec)
     end
+
+    @testset "curvatures" begin
+        @test prod(isapprox.(
+            curvature_components(∇X, ∇B),
+                (1.1907558171184576, -0.8554865685407761)))
+        @test prod(isapprox.(
+            curvature_components(∇X, ∇B, dpdψ=dpdψ),
+                (1.9755442095795814, -0.8554865685407761)))
+    end
+
 end
