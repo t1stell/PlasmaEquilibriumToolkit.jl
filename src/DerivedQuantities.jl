@@ -302,6 +302,10 @@ function normal_curvature(B::CoordinateVector{T},
   #return dot(∇B/norm(B),∇X/norm(∇X)) # equivalent beta = 0 formula, much simpler
   return dot((∇B/norm(B) - 4π * 1e-7 * dpdψ/norm(B)^2*∇X),∇X/norm(∇X)) # Finite beta formula; negative formula in front of the pressure
   # term because of the sign convention for ∇X
+  # Note that the sign of the normal curvature chosen here corresponds to the outward pointing curvature, which is consistent
+  # with the sign convention of ∇X. This sign for the normal curvature differs from the usual convention, used in DESC for example,
+  # in the sense that, unusually, "bad curvature regions" correspond to positive normal curvature in this code. We do not change the sign in the code, because
+  # it was a convention decided earlier by Ben Faber, Chris Hegna, et al., which may be used in other places in the Julia framework.
 end
 
 """
