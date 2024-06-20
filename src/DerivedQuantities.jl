@@ -326,7 +326,8 @@ end
     curvature_components(e::BasisVectors,gradB::CoordinateVector)
 
 Computes the normal and geodesic curvature vectors for a stright field line coordinate system with basis vectors
-∇X = `e[:,1]` and ∇Y = `e[:,2]`.
+∇X = `e[:,1]` and ∇Y = `e[:,2]`, as well as a key combination of the two, representing the curvature vector contribution
+to the toroidal ITG drive in ballooning formalism, see C. C. Hegna, P. W. Terry, and B. J. Faber, Phys. Plasmas 25, 022511 (2018)
 
 See also: [`normal_curvature`](@ref), [`geodesic_curvature`](@ref)
 """
@@ -335,8 +336,11 @@ function curvature_components(∇X::BasisVectors{T},
                               dpdψ::Real=0.0,
                              ) where {T}
   B = cross(∇X[:, 1], ∇X[:, 2])
+  Λ = -dot(∇X[:, 1],∇X[:, 2]) / norm(B) # Λ is Eq. 7 of C. C. Hegna, P. W. Terry, and B. J. Faber, Phys. Plasmas 25, 022511 (2018)
+  combined_curv = normal_curvature(B, ∇B, ∇X[:, 1], ∇X[:, 2],dpdψ=dpdψ) + Λ*geodesic_curvature(B, ∇B,∇X[:, 1]) # This last term is κn+Λ*κg
   return normal_curvature(B, ∇B, ∇X[:, 1], ∇X[:, 2],dpdψ=dpdψ),
-         geodesic_curvature(B, ∇B,∇X[:, 1])
+         geodesic_curvature(B, ∇B,∇X[:, 1]), 
+         combined_curv # This last term is κn+Λ*κg
 end
 
 function curvature_components(∇X::AbstractArray{BasisVectors{T}},
