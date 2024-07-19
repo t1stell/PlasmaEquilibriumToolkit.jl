@@ -274,18 +274,16 @@ function θ_internal(x::FluxCoordinates,
                   interval=0.25,
                   attempt = 1) where {S <: AbstractSurface}
 
-    function residual(θ::T) where {T <: AbstractFloat}
-        return θ - x.θ + surface_get(FluxCoordinates(x.ψ, θ, x.ζ), surf, :λ)
-    end
+  function residual(θ::T) where {T <: AbstractFloat}
+    return θ - x.θ + surface_get(FluxCoordinates(x.ψ, θ, x.ζ), surf, :λ)
+  end
 
-    bracket = (x.θ-interval,x.θ+interval)
-    try
-        return Roots.find_zero(residual,bracket,Roots.Order2())
-    catch err
-        if (err isa Roots.ConvergenceFailed) && attempt <= 5
-            return θ_internal(x,λ,2*interval, attempt+1)
-        end
-    end
+  bracket = (x.θ-interval,x.θ+interval)
+  try
+    return Roots.find_zero(residual,bracket,Roots.Order2())
+  catch err
+      return θ_internal(x,surf,2*interval, attempt = attempt+1)
+  end
 end
 
 function θ_internal(x::AbstractArray{FluxCoordinates},
