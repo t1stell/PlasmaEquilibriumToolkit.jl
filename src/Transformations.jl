@@ -266,31 +266,32 @@ in `FluxCoordinates`. The surface must have a λ component to relate the angles
 """
 function θ_internal(x::FluxCoordinates,
                   surf::S,
-                  interval=0.25) where {S <: AbstractSurface}
+                  interval=0.25,
+                  attempt = 1) where {S <: AbstractSurface}
 
-  function residual(θ::T) where {T <: AbstractFloat}
-    return θ - x.θ + surface_get(FluxCoordinates(x.ψ, θ, x.ζ), surf, :λ)
-  end
-
-  bracket = (x.θ-interval,x.θ+interval)
-  try
-    return Roots.find_zero(residual,bracket,Roots.Order2())
-  catch err
-    if isa(err,Roots.ConvergenceFailed) && attempt <= 5
-      return thetaVmec(x,λ,2*interval)
+    function residual(θ::T) where {T <: AbstractFloat}
+        return θ - x.θ + surface_get(FluxCoordinates(x.ψ, θ, x.ζ), surf, :λ)
     end
-  end
+
+    bracket = (x.θ-interval,x.θ+interval)
+    try
+        return Roots.find_zero(residual,bracket,Roots.Order2())
+    catch err
+        if (err isa Roots.ConvergenceFailed) && attempt <= 5
+            return θ_internal(x,λ,2*interval, attempt+1)
+        end
+    end
 end
 
 function θ_internal(x::AbstractArray{FluxCoordinates},
                    surf::S;
                   ) where {S <: AbstractSurface}
-  T = typeof(x.θ)
-  y = Array{T, ndims(x)}(undef,size(x))
-  @batch for i in eachindex(x)
-    y[i] = thetaVmec(x[i], surf)
-  end
-  return y
+    T = typeof(x.θ)
+    y = Array{T, ndims(x)}(undef,size(x))
+    @batch for i in eachindex(x)
+        y[i] = θ_internal(x[i], surf)
+    end
+    return y
 end
 
 """ 
